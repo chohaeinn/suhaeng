@@ -32,3 +32,6 @@ pip install -r requirements.txt
 streamlit run app.py
 
 검사: Python 문법, 격자 좌표 9개 생성, 일정 날짜 계산 확인. 실제 API와 Streamlit 브라우저 화면은 미검증.
+
+## v0.3 변경
+5단계 이동 화면, 표 제거, 검색 결과 내 이름/최하위 업종명 필터, 사용자 점포 선택 후 비교. 필터는 의미를 완벽히 판별하지 못하므로 점포 확인 단계를 제공합니다. 기존 Secrets 설정 그대로 사용. 브라우저와 실제 API 미검증.
