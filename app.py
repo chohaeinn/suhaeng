@@ -75,7 +75,8 @@ st.session_state.setdefault('step',1)
 step=st.session_state['step']
 st.title('🧭 창업 나침반')
 st.caption('어떤 가게를 열고 싶으세요? 동네를 고르는 일부터 함께 준비해요.')
-st.progress(step/5,text=f'{step} / 5 · '+['가게 정하기','동네 고르기','점포 확인','후보 살펴보기','개업 준비'][step-1])
+visible_step={1:1,2:2,4:3,5:4}.get(step,2)
+st.progress(visible_step/4,text=f'{visible_step} / 4 · '+['가게 정하기','동네 고르기','후보 살펴보기','개업 준비'][visible_step-1])
 with st.sidebar:
     st.header('연결 설정')
     kakao=(st.text_input('카카오 REST API 키',type='password') or secret('KAKAO_REST_API_KEY')).strip()
@@ -137,7 +138,8 @@ if step==2:
                         results.append({'name':name,'lat':lat,'lon':lon,'shops':list(shops.values()),'limited':limited,'facilities':{},'facility_limits':[]})
                 st.session_state['result']={'rows':results,'center':center['place_name'],'terms':st.session_state['terms'][:],'radius':radius,'allshops':allshops}
                 st.session_state['confirmed']=[pid for pid,d in allshops.items() if relevant(d,st.session_state['terms'])]
-                move(3)
+                st.session_state['confirmed']=list(allshops)
+                move(4)
             except Exception: st.error('가게를 찾다가 연결이 끊겼어요. 카카오 키와 사용 한도를 확인하고 다시 눌러 주세요.')
     if st.button('이전'): move(1)
     st.stop()
@@ -148,26 +150,6 @@ if not record:
     if st.button('동네 고르기'): move(2)
     st.stop()
 
-if step==3:
-    st.header('비교할 가게가 맞는지 확인해 주세요')
-    st.write('검색어: **'+', '.join(record['terms'])+'**')
-    st.caption('실제 검색 결과만 가져왔어요. 이름 또는 업종명에 검색어가 있는 점포를 먼저 골랐어요. 이름이 다른 전문점은 빠질 수 있고, 비슷한 이름의 다른 업종은 섞일 수 있어 직접 바꿀 수 있어요.')
-    shops=record['allshops']; strict=[pid for pid,d in shops.items() if relevant(d,record['terms'])]
-    broaden=st.toggle('검색 결과 전체에서 직접 고르기',value=False)
-    candidates=list(shops) if broaden else strict
-    chosen=st.multiselect('비교에 넣을 가게',candidates,default=[p for p in st.session_state['confirmed'] if p in candidates],format_func=lambda p:shops[p]['place_name']+' · '+shops[p].get('category_name',''))
-    st.caption(f'검색된 가게 {len(shops)}곳 중 {len(chosen)}곳을 비교해요. 선택하지 않은 가게는 지도와 점포 수에서 모두 빠져요.')
-    with st.expander('주소와 원문 링크 보기'):
-        for pid in chosen:
-            d=shops[pid]
-            st.write(d['place_name']+' · '+d.get('address_name',''))
-            if d.get('place_url'): st.link_button('카카오에서 확인',d['place_url'])
-    if not shops: st.info('검색된 점포가 없어요. 실제 경쟁이 없는지는 현장에서 확인해 주세요.')
-    if st.button('다음 · 후보 보기',type='primary',use_container_width=True):
-        st.session_state['confirmed']=chosen
-        move(4)
-    if st.button('이전'): move(2)
-    st.stop()
 
 rows=[]
 for src in record['rows']:
@@ -175,13 +157,14 @@ for src in record['rows']:
 rows.sort(key=lambda r:(r['limited'],r['count']))
 valid=[r for r in rows if not r['limited']]; top=valid[:3]
 if step==4:
-    st.header('이 동네부터 둘러보면 어떨까요?')
+    st.header('지도에서 후보를 둘러보세요')
+    st.caption('입력한 키워드로 검색된 점포를 별도 이름 필터 없이 표시해요. 관련 없는 결과가 섞일 수 있으니 지도에서 직접 확인해 주세요.')
     st.caption(f"{record['center']} 주변 · 반경 {record['radius']}m · 검색어 {', '.join(record['terms'])}")
     if not top: st.warning('모든 구역이 검색 제한에 걸렸어요. 반경을 줄여 다시 검색해 주세요.')
     for i,r in enumerate(top):
         with st.container(border=True):
             st.subheader(f"📍 {record['center']} 기준 {r['name']}")
-            st.metric('선택한 경쟁 점포',f"{r['count']}곳")
+            st.metric('검색된 경쟁 점포',f"{r['count']}곳")
             st.write('비교한 구역 중 검색된 경쟁 점포가 적은 편이에요.')
             st.caption('같은 점포 수라면 우열은 없어요. 손님이 충분한지, 임대료가 맞는지는 직접 확인해야 해요.')
     m=folium.Map(location=[float(record['rows'][4]['lat']),float(record['rows'][4]['lon'])],zoom_start=14,tiles='OpenStreetMap')
@@ -189,9 +172,9 @@ if step==4:
         folium.Circle([r['lat'],r['lon']],radius=record['radius'],color='#10a88b' if r in top else '#97aaa4',fill=True,fill_opacity=.05,tooltip=f"{r['name']} · {r['count']}곳"+(' · 검색 제한' if r['limited'] else '')).add_to(m)
     for pid in st.session_state['confirmed']:
         d=record['allshops'][pid]
-        folium.CircleMarker([float(d['y']),float(d['x'])],radius=5,color='#ee875b',fill=True,tooltip=d['place_name']).add_to(m)
+        folium.CircleMarker([float(d['y']),float(d['x'])],radius=5,color='#ee875b',fill=True,tooltip=d['place_name'],popup=folium.Popup(html.escape(d['place_name'])+'<br>'+html.escape(d.get('road_address_name') or d.get('address_name',''))+'<br>'+html.escape(d.get('category_name',''))+'<br><a target="_blank" rel="noopener noreferrer" href="https://place.map.kakao.com/'+html.escape(str(d['id']),quote=True)+'">점포 상세 보기</a>',max_width=300)).add_to(m)
     st_folium(m,height=420,use_container_width=True,returned_objects=[])
-    st.caption('민트색 원: 추천 후보 · 주황색 점: 확인한 경쟁 점포')
+    st.caption('민트색 원: 추천 후보 · 주황색 점: 검색된 점포. 점포를 눌러 이름과 주소를 확인해 주세요.')
     with st.expander('다른 구역도 보기'):
         for r in rows: st.write(f"{r['name']} · {r['count']}곳"+(' · 검색 한도 때문에 추천 제외' if r['limited'] else ''))
     selected=st.selectbox('어디를 더 알아볼까요?',range(len(rows)),format_func=lambda i:record['center']+' 기준 '+rows[i]['name'])
@@ -207,7 +190,7 @@ if step==4:
         except Exception: st.error('주변 시설을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.')
     if st.button('이곳으로 준비 계획 만들기',type='primary',use_container_width=True):
         st.session_state['chosen_area']=record['center']+' 기준 '+rows[selected]['name']; move(5)
-    if st.button('이전 · 비교할 점포 수정'): move(3)
+    if st.button('이전 · 동네 바꾸기'): move(2)
     st.caption('검색에 나온 점포를 비교한 결과예요. 전체 점포 수나 창업 성공을 보장하지 않으며, 임대료와 유동인구는 반영되지 않았어요.')
     st.stop()
 
