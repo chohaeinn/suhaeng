@@ -89,11 +89,30 @@ import unicodedata
 def normalize(s):
     return re.sub(r'[^가-힣a-z0-9]', '', unicodedata.normalize('NFKC',s).lower())
 
+# 브랜드 참고 목록: 실제 점포 위치는 반드시 카카오 검색 결과에서만 사용합니다.
+# 완전한 목록이 아니며 브랜드 업종과 지점 운영 상태는 변경될 수 있습니다.
+BRAND_GROUPS = [
+    {'terms':['돈가스','돈까스','동가스','돈카츠','카츠','경양식'], 'brands':['홍익돈까스','백소정','유미카츠','최고당돈가스','브라운돈까스','긴자료코']},
+    {'terms':['샐러드','샐러드볼','포케'], 'brands':['샐러디','포케올데이','슬로우캘리','크리스피프레시']},
+    {'terms':['카페','커피','커피전문점'], 'brands':['스타벅스','메가MGC커피','메가커피','컴포즈커피','빽다방','이디야커피','투썸플레이스','더벤티','할리스']},
+    {'terms':['치킨','통닭','치킨전문점'], 'brands':['교촌치킨','BHC','BBQ','굽네치킨','처갓집양념치킨','네네치킨','노랑통닭']},
+    {'terms':['베이커리','빵집','제과점'], 'brands':['파리바게뜨','뚜레쥬르','파리크라상']},
+    {'terms':['분식','떡볶이'], 'brands':['신전떡볶이','엽기떡볶이','청년다방','응급실국물떡볶이','죠스떡볶이']},
+    {'terms':['김밥'], 'brands':['고봉민김밥','바르다김선생','김가네','김밥천국']}
+]
+
+def brands_for(terms):
+    wanted={normalize(t) for t in terms}
+    return list(dict.fromkeys(brand for group in BRAND_GROUPS if wanted.intersection(normalize(t) for t in group['terms']) for brand in group['brands']))
+
 def relevant(place, terms):
-    # 검색 응답에 포함된 장소 중 이름 또는 업종명에서 검색어가 확인된 것만 기본 포함.
     name=normalize(place.get('place_name',''))
-    category=normalize(place.get('category_name','').split('>')[-1])
-    return any(normalize(t) and (normalize(t) in name or normalize(t) in category) for t in terms)
+    category=normalize(place.get('category_name',''))
+    if any(normalize(t) and (normalize(t) in name or normalize(t) in category) for t in terms): return True
+    # 알려진 브랜드도 검색 결과의 음식점·카페 여부를 함께 확인합니다.
+    food=place.get('category_group_code') in ['FD6','CE7'] or any(t in category for t in ['음식점','카페','커피'])
+    return food and any(normalize(brand) in name for brand in brands_for(terms))
+
 
 def move(n):
     st.session_state['step']=n
@@ -145,6 +164,7 @@ if step==1:
                 with st.spinner('검색어를 골라보고 있어요…'):
                     picks=ai_keywords(ai,description) if ai else suggest_local(description)
                     picks=list(dict.fromkeys(picks+suggest_local(description)))[:3]
+                    st.session_state['brand_options']=brands_for([description]+picks)
                     st.session_state['suggestions']=picks
                     st.session_state['suggest_source']=description
             except Exception:
@@ -157,6 +177,11 @@ if step==1:
         for col,word in zip(cols,st.session_state.get('suggestions',[])):
             col.button(('✓ ' if word in [w.strip() for w in st.session_state.get('words','').split(',')] else '+ ')+word,on_click=choose_word,args=(word,),use_container_width=True)
         if not ai: st.caption('현재는 기본 추천이에요. AI 키를 연결하면 업종 설명에 맞춰 추천해요.')
+    brand_options=list(dict.fromkeys(brands_for([description])+st.session_state.get('brand_options',[])))
+    with st.expander('체인점도 함께 찾기'):
+        st.caption('브랜드 참고 목록에서 고른 이름을 실제 장소 검색어에 추가해요. 학습이나 실시간 브랜드 조사 결과는 아니에요. 관련성이 다른 브랜드는 선택하지 마세요.')
+        selected_brands=st.multiselect('함께 검색할 브랜드',brand_options,key='selected_brands')
+        extra_brands=st.text_input('목록에 없는 브랜드',placeholder='쉼표로 구분해서 입력',key='extra_brands')
     words=st.text_input('찾을 검색어',key='words',placeholder='예: 샐러드')
     st.caption('기본 업종도 직접 추가할 수 있어요. 예: 돈가스, 경양식, 카츠, 튀김. 넓은 검색어를 고르면 다른 종류의 음식점도 포함될 수 있어요.')
     if st.button('다음 · 지도에서 고르기',type='primary',use_container_width=True):
@@ -164,6 +189,7 @@ if step==1:
         if not 1<=len(terms)<=6: st.warning('검색어를 1~6개 골라 주세요.')
         else:
             st.session_state['terms']=terms
+            st.session_state['brand_terms']=list(dict.fromkeys(selected_brands+[b.strip() for b in extra_brands.split(',') if b.strip()]))
             st.session_state.pop('result',None)
             move(2)
     st.stop()
@@ -211,11 +237,13 @@ if step==2:
                 with st.spinner('주변 가게를 찾고 있어요…'):
                     for name,lat,lon in grid(point['lat'],point['lng'],radius*1.5):
                         shops={}; limited=False
-                        for term in st.session_state['terms']:
+                        queries=list(dict.fromkeys(st.session_state['terms']+st.session_state.get('brand_terms',[])))
+                        if len(queries)>12: raise ValueError('검색어와 브랜드를 합쳐 12개 이하로 줄여 주세요.')
+                        for term in queries:
                             docs,trunc=search(kakao,term,lat,lon,radius)
                             # 각 검색 요청의 검색어와 일치하는 결과만 허용.
                             for d in docs:
-                                if relevant(d,[term]): shops[d['id']]=d
+                                if relevant(d,st.session_state['terms']+[term]): shops[d['id']]=d
                                 else: removed.add(d['id'])
                             limited=limited or trunc
                         allshops.update(shops)
@@ -243,7 +271,7 @@ rows.sort(key=lambda r:(r['limited'],r['count']))
 valid=[r for r in rows if not r['limited']]; top=valid[:3]
 if step==4:
     st.header('지도에서 후보를 둘러보세요')
-    st.caption('검색된 점포 중 상호명이나 세부 업종에 검색어가 확인되는 곳만 표시해요. 메뉴에만 검색어가 있는 가게는 빠질 수 있어요.')
+    st.caption('검색된 점포 중 상호명이나 세부 업종에 검색어가 확인되는 곳만 표시해요. 알려진 체인점은 브랜드 참고 목록도 함께 확인해요. 메뉴에만 검색어가 있는 가게는 빠질 수 있어요.')
     st.caption(f"{record['center']} 주변 · 반경 {record['radius']}m · 검색어 {', '.join(record['terms'])}")
     left,middle,right=st.columns([1.05,2.3,1.05],gap='medium')
     with left:
