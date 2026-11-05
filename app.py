@@ -122,10 +122,10 @@ st.session_state.setdefault('step',1)
 step=st.session_state['step']
 st.title('🧭 창업 나침반')
 st.caption('어떤 가게를 열고 싶으세요? 동네를 고르는 일부터 함께 준비해요.')
-visible_step={1:1,2:2,4:3,5:4}.get(step,2)
+visible_step={1:1,2:2,4:3,5:4,6:4}.get(step,2)
 st.progress(visible_step/4,text=f'{visible_step} / 4 · '+['가게 정하기','동네 고르기','후보 살펴보기','개업 준비'][visible_step-1])
 # 단계에 따라 철제 셔터가 올라가는 배경. 입력 요소와 지도는 항상 전면에 유지.
-shutter_height={1:100,2:72,3:40,4:5}[visible_step]
+shutter_height=0 if step==6 else {1:100,2:72,3:40,4:5}[visible_step]
 previous=st.session_state.get('_shutter_height',100)
 st.session_state['_shutter_height']=shutter_height
 st.markdown("""<style>
@@ -160,7 +160,7 @@ h2{font-size:1.9rem!important}h3{font-size:1.45rem!important}
 @media(prefers-reduced-motion:reduce){[data-testid="stAppViewContainer"]::before{animation:none}.stButton>button:hover{transform:none}}
 </style>""".replace('START',str(previous-100)).replace('END',str(shutter_height-100)),unsafe_allow_html=True)
 shutter_labels=['가게 구상 중','동네 둘러보는 중','자리 살펴보는 중','오픈 준비 중']
-st.markdown(f'<div class="retro-status"><span>▣ 창업 준비 상점</span><span>{shutter_labels[visible_step-1]} · 셔터 {int((100-shutter_height)/95*100)}% 열림</span></div>',unsafe_allow_html=True)
+st.markdown(f'<div class="retro-status"><span>▣ 창업 준비 상점</span><span>{shutter_labels[visible_step-1]} · 셔터 {min(100,int((100-shutter_height)/95*100))}% 열림</span></div>',unsafe_allow_html=True)
 
 with st.sidebar:
     st.header('연결 설정')
@@ -465,4 +465,41 @@ if step==5:
         st.caption('질문과 관련 준비 메모가 외부 AI 서비스로 전송돼요. 개인정보·비밀정보는 넣지 마세요. 상담 기록은 현재 세션에서만 유지되며, AI 사용량에 따라 별도 비용이 발생할 수 있어요.')
     st.download_button('메모와 준비 목록 내려받기','\n\n'.join([area]+lines),'opening_plan.txt','text/plain')
     st.caption('메모와 체크 상태는 현재 세션에서만 유지돼요. 나가기 전에 내려받아 주세요. 파일을 앱에 다시 불러오는 기능은 아직 없어요. 신고·인허가는 해당 기관의 공식 안내를 확인해 주세요.')
+    st.divider()
+    if st.button('개업 완료 · 우리 가게 문 열기',type='primary',use_container_width=True):
+        st.session_state['celebrate_once']=True
+        move(6)
     if st.button('이전 · 다른 후보 보기'): move(4)
+
+if step==6:
+    st.markdown("""<style>
+    .opening-scene{background:#f4ebd8;border:3px solid #385c50;border-radius:12px;padding:32px 18px;text-align:center;overflow:hidden}
+    .opening-banner{font-family:'Do Hyeon',sans-serif;font-size:clamp(25px,4vw,42px);color:#265648;margin:0 0 20px}
+    .opening-row{display:flex;align-items:flex-end;justify-content:center;gap:18px}
+    .flower-stand{width:120px;flex-shrink:0;position:relative;padding-bottom:32px}
+    .flower-ring{font-size:46px;line-height:1.1;background:radial-gradient(ellipse,#e9b9c8 15%,#a1bf8a 65%,transparent 67%);padding:12px 0;border-radius:50%}
+    .flower-ribbon{font-family:'Do Hyeon',sans-serif;background:#ffd7e4;color:#7c324e;border:1px solid #c9849e;padding:10px 4px;margin:0 12px;font-size:20px}
+    .flower-stand:after{content:'';position:absolute;bottom:0;left:25%;width:50%;height:30px;border-left:5px solid #98765a;border-right:5px solid #98765a;transform:perspective(70px) rotateX(20deg)}
+    .open-shop{width:460px;max-width:100%;border:6px solid #396154;background:#e5eee8;box-shadow:0 8px 0 #b8b9a4}
+    .open-shop-sign{background:#a2dbcb;padding:18px 10px;border-bottom:5px solid #396154;font-family:'Do Hyeon',sans-serif;color:#214f40;font-size:clamp(23px,4vw,34px);overflow-wrap:anywhere}
+    .open-awning{height:32px;background:repeating-linear-gradient(90deg,#478b70 0px,#478b70 40px,#fff6d9 40px,#fff6d9 80px);border-bottom:3px solid #396154}
+    .open-interior{min-height:200px;padding:30px 15px;background:linear-gradient(180deg,#fff1c7,#e4c59d);border:12px solid #bed5cd;border-top:0}
+    .open-badge{display:inline-block;background:#fff9e7;border:3px solid #497a62;padding:8px 22px;color:#2a654c;font-size:28px;font-family:'Do Hyeon',sans-serif;transform:rotate(-4deg)}
+    .open-interior p{color:#493e31;font-weight:500;font-size:18px}
+    .opening-message{margin-top:28px;font-size:19px;color:#35574a;line-height:1.9}
+    @media(max-width:700px){.opening-row{gap:5px}.flower-stand{width:55px}.flower-ring{font-size:25px;padding:10px 0}.flower-ribbon{font-size:15px;margin:0 2px}.opening-scene{padding:22px 7px}.open-interior{padding:22px 5px;min-height:160px;border-width:6px}}
+    </style>""",unsafe_allow_html=True)
+    st.subheader('드디어, 우리 가게가 문을 열었어요!')
+    shop_name=st.text_input('간판에 넣을 가게 이름',value=st.session_state.get('opening_shop_name','우리 가게'),key='opening_shop_name')
+    safe_name=html.escape(shop_name.strip() or '우리 가게')
+    st.markdown(f"""<section class="opening-scene" aria-label="셔터를 모두 올린 가게와 개업 축하 화환">
+    <div class="opening-banner">✦ 개업을 진심으로 축하합니다 ✦</div>
+    <div class="opening-row">
+      <div class="flower-stand"><div class="flower-ring">🌸🌼<br>🌺🌷</div><div class="flower-ribbon">축<br>개<br>업</div></div>
+      <div class="open-shop"><div class="open-shop-sign">{safe_name}</div><div class="open-awning"></div>
+      <div class="open-interior"><span class="open-badge">문 열었습니다</span><p>정성을 담아 준비한 가게<br>오늘부터 새로운 시작입니다.</p><span aria-hidden="true">🪴　 🪑　 ☕　 🪴</span></div></div>
+      <div class="flower-stand"><div class="flower-ring">🌻🌺<br>🌷🌸</div><div class="flower-ribbon">응<br>원<br>합<br>니<br>다</div></div>
+    </div><div class="opening-message">준비하며 쌓은 고민과 노력이<br>이 가게만의 이야기가 되길 바랍니다.<br>사장님의 첫걸음을 응원해요!</div></section>""",unsafe_allow_html=True)
+    if st.session_state.pop('celebrate_once',False): st.balloons()
+    st.caption('앱 안에서 개업을 기념하는 화면이에요. 실제 신고·인허가 완료를 의미하지 않아요.')
+    if st.button('준비 목록과 메모 다시 보기',use_container_width=True): move(5)
