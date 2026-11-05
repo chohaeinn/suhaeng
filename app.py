@@ -124,6 +124,44 @@ st.title('🧭 창업 나침반')
 st.caption('어떤 가게를 열고 싶으세요? 동네를 고르는 일부터 함께 준비해요.')
 visible_step={1:1,2:2,4:3,5:4}.get(step,2)
 st.progress(visible_step/4,text=f'{visible_step} / 4 · '+['가게 정하기','동네 고르기','후보 살펴보기','개업 준비'][visible_step-1])
+# 단계에 따라 철제 셔터가 올라가는 배경. 입력 요소와 지도는 항상 전면에 유지.
+shutter_height={1:94,2:68,3:38,4:10}[visible_step]
+previous=st.session_state.get('_shutter_height',shutter_height)
+st.session_state['_shutter_height']=shutter_height
+st.markdown("""<style>
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&display=swap');
+:root{--retro-ink:#203b36;--retro-mint:#a2dbcb;--retro-paper:#fffdf5}
+.stApp{background:#e7efdf;color:var(--retro-ink)}
+[data-testid="stAppViewContainer"]{position:relative;background:transparent}
+[data-testid="stAppViewContainer"]::before{
+ content:'';position:fixed;top:0;left:0;right:0;height:HEIGHTvh;pointer-events:none;z-index:0;
+ background:repeating-linear-gradient(180deg,#b6c0bd 0px,#e0e5e2 5px,#c3cdca 20px,#9ca9a5 22px,#687e75 24px,#b6c0bd 26px);
+ border-bottom:9px solid #52665e;box-shadow:0 10px 0 #263f3820;
+ animation:shop-shutter .85s cubic-bezier(.22,.7,.25,1) both;
+}
+@keyframes shop-shutter{from{height:PREVIOUSvh}to{height:HEIGHTvh}}
+[data-testid="stMain"]{position:relative;z-index:1;background:transparent}
+.block-container{max-width:1700px;background:#fffdf5f2;border:3px solid #35584d;border-top:9px solid #35584d;border-radius:9px;box-shadow:7px 7px 0 #33554b30;margin-top:2rem;margin-bottom:3rem;padding:2rem}
+h1,h2,h3{font-family:'Black Han Sans','Arial Black',sans-serif!important;font-weight:900!important;letter-spacing:.01em!important;color:#244b40!important}
+h1{background:#a2dbcb;border:3px solid #244b40;border-bottom:7px solid #244b40;padding:16px 20px!important;border-radius:6px;text-shadow:2px 2px 0 #f6fff3;font-size:2.6rem!important}
+h2{font-size:1.9rem!important}h3{font-size:1.45rem!important}
+.stButton>button,.stDownloadButton>button{background:#fff9e9;border:2px solid #35584d;border-radius:6px;box-shadow:3px 3px 0 #35584d;min-height:48px;color:#203b36;font-weight:800}
+.stButton>button p,.stDownloadButton>button p{font-family:'Do Hyeon',sans-serif!important;font-size:1.15rem!important}
+.stButton>button[kind="primary"]{background:#a2dbcb;color:#173c30}
+.stButton>button:hover{background:#d6efdf;border-color:#244b40;transform:translateY(-1px)}
+[data-testid="stWidgetLabel"] p{font-weight:800!important;font-size:1.04rem}
+[data-testid="stMetric"]{border:2px solid #587465;background:#f0f6e6;border-radius:6px}
+[data-testid="stMetricValue"]{font-family:'Do Hyeon',sans-serif;font-weight:900}
+[data-testid="stVerticalBlockBorderWrapper"]>div{border-radius:7px}
+[data-testid="stSidebar"]{background:#d4e5d8;border-right:3px solid #35584d}
+[data-testid="stChatMessage"]{background:#f0f5e8;border:1px solid #9fb5a8;border-radius:8px}
+.retro-status{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#294b3f;color:#fff8d8;border:2px solid #173c30;padding:10px 16px;margin:14px 0;font-family:'Do Hyeon',sans-serif;font-size:1.15rem;letter-spacing:.04em}
+@media(max-width:700px){.block-container{padding:1rem;margin-top:1rem;border-width:2px}h1{font-size:1.9rem!important}}
+@media(prefers-reduced-motion:reduce){[data-testid="stAppViewContainer"]::before{animation:none}.stButton>button:hover{transform:none}}
+</style>""".replace('PREVIOUS',str(previous)).replace('HEIGHT',str(shutter_height)),unsafe_allow_html=True)
+shutter_labels=['가게 구상 중','동네 둘러보는 중','자리 살펴보는 중','오픈 준비 중']
+st.markdown(f'<div class="retro-status"><span>▣ 창업 준비 상점</span><span>{shutter_labels[visible_step-1]} · 셔터 {int((94-shutter_height)/84*100)}% 열림</span></div>',unsafe_allow_html=True)
+
 with st.sidebar:
     st.header('연결 설정')
     kakao=(st.text_input('카카오 REST API 키',type='password') or secret('KAKAO_REST_API_KEY')).strip()
