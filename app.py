@@ -336,7 +336,7 @@ if step==5:
                 note=st.text_area('메모',key=f'note-{area}-{task}',placeholder='예: 견적 비교하기, 담당자에게 물어볼 내용',height=85)
             lines.append(f"{'완료' if done else '미완료'} | {date} | {task}\n메모: {note or '(없음)'}")
     with idea_column:
-        st.subheader('어떤 가게로 시작해 볼까요?')
+        st.subheader('우리 가게, 함께 구상해요')
         st.caption('콘셉트와 메뉴는 시험해 볼 아이디어예요. 실제 고객 유입이나 매출을 보장하지 않아요. 지역 수요 분석 결과는 반영되지 않아요.')
         description=st.session_state.get('description','')
         terms=st.session_state.get('terms',[])
@@ -358,45 +358,45 @@ if step==5:
                         st.write(item['detail'])
                 lines.append('\n'+label)
                 lines.extend(item['title']+'\n'+item['detail'] for item in saved['data'][field])
-    st.divider()
-    st.subheader('궁금한 건 여기서 물어보세요')
-    st.caption('업종, 선택 지역, 준비 메모와 추천 내용을 참고해 함께 구체화해요. 실시간 검색이나 실제 상권 수요 확인 기능은 없어요.')
-    chat_scope=json.dumps([area,description,terms],ensure_ascii=False)
-    if st.session_state.get('chat_scope')!=chat_scope:
-        st.session_state['chat_scope']=chat_scope
-        st.session_state['startup_messages']=[]
-    history=st.session_state.setdefault('startup_messages',[])
-    if st.button('상담 대화 지우기'):
-        st.session_state['startup_messages']=[]
-        st.rerun()
-    for message in history:
-        with st.chat_message(message['role']): st.markdown(message['content'])
-    question=None
-    if ai:
-        quick=st.columns(3)
-        for col,label,prompt in zip(quick,['콘셉트 구체화','메뉴 구성 상담','준비 순서 상담'],['추천 콘셉트를 비교하고, 지금 업종에 맞는 한 가지 안을 구체화해 줘. 모르는 고객 조건은 먼저 물어봐 줘.','추천 메뉴를 실제로 준비하려면 어떤 재료와 조리 동선, 원가 항목을 확인해야 하는지 알려줘.','체크리스트와 메모를 참고해서 지금 먼저 확인할 일 3가지를 골라줘.']):
-            if col.button(label,use_container_width=True): question=prompt
-        typed=st.chat_input('예: 1번 콘셉트로 메뉴를 5개만 구성해 줘',max_chars=3000)
-        if typed: question=typed
-    else:
-        st.info('왼쪽 연결 설정에 AI 키를 입력하거나 Streamlit Secrets에 BAZE_API_KEY를 저장하면 상담할 수 있어요.')
-    if question:
-        notes=[{'task':task,'memo':st.session_state.get(f'note-{area}-{task}',''),'done':st.session_state.get(f'{area}-{opening}-{task}',False)} for _,task in plan(opening)]
-        ideas=saved['data'] if saved and saved['signature']==signature else None
-        context={'업종':description,'지역':area,'검색어':terms,'목표개업일':str(opening),'준비상태':notes,'추천아이디어':ideas}
-        pending=history+[{'role':'user','content':question}]
-        try:
-            with st.spinner('준비 내용을 살펴보고 있어요…'):
-                answer=startup_chat(ai,context,pending)
-            st.session_state['startup_messages']=pending+[{'role':'assistant','content':answer}]
+        st.divider()
+        st.markdown('#### 추천을 보고 바로 이야기해 보세요')
+        st.caption('업종, 선택 지역, 준비 메모와 추천 내용을 참고해 함께 구체화해요. 실시간 검색이나 실제 상권 수요 확인 기능은 없어요.')
+        chat_scope=json.dumps([area,description,terms],ensure_ascii=False)
+        if st.session_state.get('chat_scope')!=chat_scope:
+            st.session_state['chat_scope']=chat_scope
+            st.session_state['startup_messages']=[]
+        history=st.session_state.setdefault('startup_messages',[])
+        if st.button('상담 대화 지우기'):
+            st.session_state['startup_messages']=[]
             st.rerun()
-        except Exception as e:
-            st.error(str(e))
-            st.caption('전송에 실패한 질문은 대화 기록에 추가되지 않았어요. 다시 입력하거나 버튼을 눌러 주세요.')
-    if history:
-        transcript='\n\n'.join(('나: ' if m['role']=='user' else '도우미: ')+m['content'] for m in history)
-        st.download_button('상담 내용 내려받기',transcript,'startup_chat.txt','text/plain')
-    st.caption('질문과 관련 준비 메모가 외부 AI 서비스로 전송돼요. 개인정보·비밀정보는 넣지 마세요. 상담 기록은 현재 세션에서만 유지되며, AI 사용량에 따라 별도 비용이 발생할 수 있어요.')
+        for message in history:
+            with st.chat_message(message['role']): st.markdown(message['content'])
+        question=None
+        if ai:
+            quick=st.columns(3)
+            for col,label,prompt in zip(quick,['콘셉트 구체화','메뉴 구성 상담','준비 순서 상담'],['추천 콘셉트를 비교하고, 지금 업종에 맞는 한 가지 안을 구체화해 줘. 모르는 고객 조건은 먼저 물어봐 줘.','추천 메뉴를 실제로 준비하려면 어떤 재료와 조리 동선, 원가 항목을 확인해야 하는지 알려줘.','체크리스트와 메모를 참고해서 지금 먼저 확인할 일 3가지를 골라줘.']):
+                if col.button(label,use_container_width=True): question=prompt
+            typed=st.chat_input('예: 1번 콘셉트로 메뉴를 5개만 구성해 줘',max_chars=3000)
+            if typed: question=typed
+        else:
+            st.info('왼쪽 연결 설정에 AI 키를 입력하거나 Streamlit Secrets에 BAZE_API_KEY를 저장하면 상담할 수 있어요.')
+        if question:
+            notes=[{'task':task,'memo':st.session_state.get(f'note-{area}-{task}',''),'done':st.session_state.get(f'{area}-{opening}-{task}',False)} for _,task in plan(opening)]
+            ideas=saved['data'] if saved and saved['signature']==signature else None
+            context={'업종':description,'지역':area,'검색어':terms,'목표개업일':str(opening),'준비상태':notes,'추천아이디어':ideas}
+            pending=history+[{'role':'user','content':question}]
+            try:
+                with st.spinner('준비 내용을 살펴보고 있어요…'):
+                    answer=startup_chat(ai,context,pending)
+                st.session_state['startup_messages']=pending+[{'role':'assistant','content':answer}]
+                st.rerun()
+            except Exception as e:
+                st.error(str(e))
+                st.caption('전송에 실패한 질문은 대화 기록에 추가되지 않았어요. 다시 입력하거나 버튼을 눌러 주세요.')
+        if history:
+            transcript='\n\n'.join(('나: ' if m['role']=='user' else '도우미: ')+m['content'] for m in history)
+            st.download_button('상담 내용 내려받기',transcript,'startup_chat.txt','text/plain')
+        st.caption('질문과 관련 준비 메모가 외부 AI 서비스로 전송돼요. 개인정보·비밀정보는 넣지 마세요. 상담 기록은 현재 세션에서만 유지되며, AI 사용량에 따라 별도 비용이 발생할 수 있어요.')
     st.download_button('메모와 준비 목록 내려받기','\n\n'.join([area]+lines),'opening_plan.txt','text/plain')
     st.caption('메모와 체크 상태는 현재 세션에서만 유지돼요. 나가기 전에 내려받아 주세요. 파일을 앱에 다시 불러오는 기능은 아직 없어요. 신고·인허가는 해당 기관의 공식 안내를 확인해 주세요.')
     if st.button('이전 · 다른 후보 보기'): move(4)
