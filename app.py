@@ -118,7 +118,7 @@ def move(n):
     st.session_state['step']=n
     st.rerun()
 
-st.session_state.setdefault('step',1)
+st.session_state.setdefault('step',0)
 step=st.session_state['step']
 st.title('🧭 창업 나침반')
 st.caption('어떤 가게를 열고 싶으세요? 동네를 고르는 일부터 함께 준비해요.')
@@ -191,6 +191,30 @@ def choose_word(word):
     if word in words: words.remove(word)
     elif len(words)<6: words.append(word)
     st.session_state['words']=', '.join(words)
+
+if step==0:
+    st.markdown("<div style='text-align:center;background:#d5e7ce;border:5px solid #486451;padding:40px 20px;border-radius:12px'><h1>골목 창업 상회</h1><p>꿈꾸던 우리 가게, 여기서 준비해요.</p><p>동네 찾기부터 개업하는 날까지</p></div>",unsafe_allow_html=True)
+    left,right=st.columns(2)
+    with left:
+        st.subheader('나의 점포 보기')
+        st.write('이번 접속에서 준비하던 가게를 이어서 살펴보세요.')
+        if st.button('나의 점포 보기',use_container_width=True):
+            if st.session_state.get('result'): move(5)
+            else: st.info('아직 준비 중인 점포가 없어요. 오른쪽에서 새 점포를 만들어 주세요.')
+    with right:
+        st.subheader('새 점포 만들기')
+        st.write('하고 싶은 업종을 정하고 나에게 맞는 동네를 찾아보세요.')
+        confirm=st.checkbox('기존 준비 내용이 있다면 초기화하고 새로 시작할게요.')
+        if st.button('새 점포 만들기',type='primary',use_container_width=True):
+            if st.session_state.get('result') and not confirm:
+                st.warning('기존 메모를 내려받은 뒤 초기화 항목에 체크해 주세요.')
+            else:
+                keep={k:v for k,v in st.session_state.items() if k in ['baze_base','baze_model']}
+                st.session_state.clear()
+                st.session_state.update(keep)
+                move(1)
+    st.caption('현재 점포 정보는 접속 세션에서만 유지돼요. 브라우저를 닫거나 세션이 끝나면 사라질 수 있어요.')
+    st.stop()
 
 if step==1:
     st.header('어떤 가게를 열고 싶으세요?')
@@ -477,7 +501,7 @@ if step==6:
     .opening-banner{font-family:'Do Hyeon',sans-serif;font-size:clamp(25px,4vw,42px);color:#265648;margin:0 0 20px}
     .opening-row{display:flex;align-items:flex-end;justify-content:center;gap:18px}
     .flower-stand{width:120px;flex-shrink:0;position:relative;padding-bottom:32px}
-    .flower-ring{font-size:46px;line-height:1.1;background:radial-gradient(ellipse,#e9b9c8 15%,#a1bf8a 65%,transparent 67%);padding:12px 0;border-radius:50%}
+    .flower-ring{font-size:25px;line-height:1.25;background:repeating-conic-gradient(from 15deg,#284b30 0deg 8deg,#789568 8deg 12deg);padding:30px 4px 15px;clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);border-radius:30% 30% 8% 8%;min-height:230px;filter:drop-shadow(2px 3px 2px #999)}
     .flower-ribbon{font-family:'Do Hyeon',sans-serif;background:#ffd7e4;color:#7c324e;border:1px solid #c9849e;padding:10px 4px;margin:0 12px;font-size:20px}
     .flower-stand:after{content:'';position:absolute;bottom:0;left:25%;width:50%;height:30px;border-left:5px solid #98765a;border-right:5px solid #98765a;transform:perspective(70px) rotateX(20deg)}
     .open-shop{width:460px;max-width:100%;border:6px solid #396154;background:#e5eee8;box-shadow:0 8px 0 #b8b9a4}
@@ -495,11 +519,14 @@ if step==6:
     st.markdown(f"""<section class="opening-scene" aria-label="셔터를 모두 올린 가게와 개업 축하 화환">
     <div class="opening-banner">✦ 개업을 진심으로 축하합니다 ✦</div>
     <div class="opening-row">
-      <div class="flower-stand"><div class="flower-ring">🌸🌼<br>🌺🌷</div><div class="flower-ribbon">축<br>개<br>업</div></div>
+      <div class="flower-stand"><div class="flower-ring">🎀<br>🌼🌺<br>🌷🌸🌼<br>🌺🌻🌺<br>🌸🌼🌷🌸<br>🌻🌺🌼🌻</div><div class="flower-ribbon">축<br>개<br>업</div></div>
       <div class="open-shop"><div class="open-shop-sign">{safe_name}</div><div class="open-awning"></div>
       <div class="open-interior"><span class="open-badge">문 열었습니다</span><p>정성을 담아 준비한 가게<br>오늘부터 새로운 시작입니다.</p><span aria-hidden="true">🪴　 🪑　 ☕　 🪴</span></div></div>
-      <div class="flower-stand"><div class="flower-ring">🌻🌺<br>🌷🌸</div><div class="flower-ribbon">응<br>원<br>합<br>니<br>다</div></div>
+      <div class="flower-stand"><div class="flower-ring">🎀<br>🌸🌼<br>🌺🌷🌼<br>🌻🌸🌻<br>🌼🌺🌷🌼<br>🌸🌻🌺🌸</div><div class="flower-ribbon">응<br>원<br>합<br>니<br>다</div></div>
     </div><div class="opening-message">준비하며 쌓은 고민과 노력이<br>이 가게만의 이야기가 되길 바랍니다.<br>사장님의 첫걸음을 응원해요!</div></section>""",unsafe_allow_html=True)
     if st.session_state.pop('celebrate_once',False): st.balloons()
     st.caption('앱 안에서 개업을 기념하는 화면이에요. 실제 신고·인허가 완료를 의미하지 않아요.')
     if st.button('준비 목록과 메모 다시 보기',use_container_width=True): move(5)
+
+if step!=0:
+    if st.button('처음 화면 · 골목 창업 상회',key='return_home'): move(0)
