@@ -165,6 +165,10 @@ st.markdown(f'<div class="retro-status"><span>▣ 창업 준비 상점</span><sp
 
 if step==0:
     st.markdown("""<style>.retro-status{display:none!important}.stApp::before{animation:none!important;transform:translateY(0)!important}</style>""",unsafe_allow_html=True)
+st.markdown("""<style>
+.stApp, .stApp p, .stApp label, .stApp button, .stApp input, .stApp textarea, .stApp h1, .stApp h2, .stApp h3, .stApp h4{font-family:'Do Hyeon','Malgun Gothic',sans-serif!important;font-weight:400!important}
+.stApp p,.stApp label{line-height:1.65}
+</style>""",unsafe_allow_html=True)
 with st.sidebar:
     st.header('연결 설정')
     kakao=(st.text_input('카카오 REST API 키',type='password') or secret('KAKAO_REST_API_KEY')).strip()
@@ -220,6 +224,15 @@ if step==0:
     .stButton>button{background:transparent!important;border:0!important;box-shadow:none!important;color:#214b3e!important;font-family:'Do Hyeon',sans-serif!important;font-size:clamp(22px,3vw,36px)!important;min-height:68px!important}
     .stButton>button p{font-size:inherit!important}
     .stButton>button:hover{color:#102e24!important;text-decoration:underline}
+    </style>""",unsafe_allow_html=True)
+    st.markdown("""<style>
+    /* 배경 셔터 하나만 남기고 제목 영역의 별도 철판은 제거 */
+    .home-shutter{background:transparent!important;border:0!important;box-shadow:none!important}
+    .home-shutter:after{display:none!important}
+    .stApp, .stApp p, .stApp label, .stApp button, .stApp input, .stApp textarea, .stApp h1, .stApp h2, .stApp h3, .stApp span{font-family:'Do Hyeon','Malgun Gothic',sans-serif!important;font-weight:400!important}
+    .stButton>button{background:#dfdcc8!important;border:3px solid #35594b!important;border-radius:5px!important;box-shadow:4px 5px 0 #35594b!important;padding:18px 24px!important;color:#254c3e!important;min-height:86px!important;text-decoration:none!important}
+    .stButton>button:hover{background:#c8ddca!important;transform:translateY(-2px);text-decoration:none!important}
+    .stButton>button:active{transform:translate(3px,3px);box-shadow:1px 2px 0 #35594b!important}
     </style>""",unsafe_allow_html=True)
     left,right=st.columns(2)
     with left:
