@@ -686,19 +686,41 @@ if step==6:
     .opening-message{margin-top:28px;font-size:19px;color:#35574a;line-height:1.9}
     @media(max-width:700px){.opening-row{gap:5px}.flower-stand{width:55px}.flower-ring{font-size:25px;padding:10px 0}.flower-ribbon{font-size:15px;margin:0 2px}.opening-scene{padding:22px 7px}.open-interior{padding:22px 5px;min-height:160px;border-width:6px}}
     </style>""",unsafe_allow_html=True)
+    st.markdown("""<style>
+    .opening-scene{background:linear-gradient(#e0ece5 0%,#f2ecdc 66%,#dbd2be 66%,#e7ddca 100%);border:0;box-shadow:0 8px 24px #294a3b18;padding:30px 16px;border-radius:16px}
+    .opening-banner{font-size:clamp(25px,4vw,42px);margin-bottom:26px}
+    .opening-row{align-items:center}
+    .open-shop{width:520px;border-width:5px;box-shadow:8px 9px 0 #536b5133;border-radius:8px 8px 0 0;overflow:hidden}
+    .open-shop-sign{background:#2d594a;color:#f5e7bd;padding:18px;font-size:clamp(27px,4vw,42px);border-bottom:3px solid #213f35;letter-spacing:.08em}
+    .open-interior{min-height:160px;background:linear-gradient(115deg,#ffe8ae,#edd3a1);position:relative;border-color:#477160}
+    .guest-plaza{position:relative;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 13px;max-width:650px;margin:-8px auto 0;padding:14px 18px 12px;z-index:2;transform:rotate(-1deg)}
+    .guest{position:relative;display:block;width:34px;height:83px;flex-shrink:0;animation:guest-bob 3s ease-in-out infinite;animation-delay:var(--delay)}
+    .guest-head{position:absolute;top:0;left:9px;width:17px;height:20px;border-radius:45%;background:var(--skin);border-top:6px solid #3f3932;box-sizing:border-box}
+    .guest-body{position:absolute;top:22px;left:3px;width:29px;height:36px;border-radius:12px 12px 5px 5px;background:var(--coat);box-shadow:1px 3px 1px #354b4122}
+    .guest-legs{position:absolute;top:56px;left:9px;width:6px;height:22px;border-radius:2px;background:#3f4640;box-shadow:13px 0 #3f4640}
+    .guest:nth-child(3n){transform:scale(.88);margin-top:5px}.guest:nth-child(4n){margin-top:-4px}
+    .opening-message{margin-top:15px;font-size:18px;line-height:1.65}
+    @keyframes guest-bob{0%,100%{translate:0 0}50%{translate:0 -3px}}
+    @media(prefers-reduced-motion:reduce){.guest{animation:none}}
+    @media(max-width:640px){.guest-plaza{gap:3px 7px;padding:10px 0}.guest{width:25px;height:70px;scale:.85}.open-shop{width:100%}}
+    </style>""",unsafe_allow_html=True)
     st.subheader('드디어, 우리 가게가 문을 열었어요!')
     shop_name=st.text_input('간판에 넣을 가게 이름',value=st.session_state.get('opening_shop_name','우리 가게'),key='opening_shop_name')
     safe_name=html.escape(shop_name.strip() or '우리 가게')
-    st.markdown(f"""<section class="opening-scene" aria-label="셔터를 모두 올린 가게와 개업 축하 화환">
+    # 피부·옷 색을 달리한 작은 손님 일러스트. 실제 방문객 수가 아닌 축하 장식입니다.
+    colors=['#355e53','#c27d51','#a2bca9','#b85848','#788eaa','#c4a759']
+    people=''.join("<span class='guest' style='--coat:"+colors[i%len(colors)]+";--skin:"+['#edc39f','#d6a47e','#b97e58'][i%3]+";--delay:"+str((i%7)*-.3)+"s'><i class='guest-head'></i><i class='guest-body'></i><i class='guest-legs'></i></span>" for i in range(24))
+
+    st.markdown(f"""<section class="opening-scene" aria-label="문을 연 가게 앞에 손님이 모여 있는 개업 축하 장면">
     <div class="opening-banner">✦ 개업을 진심으로 축하합니다 ✦</div>
     <div class="opening-row">
-      <div class="flower-stand"><div class="flower-ring">🎀<br>🌼🌺<br>🌷🌸🌼<br>🌺🌻🌺<br>🌸🌼🌷🌸<br>🌻🌺🌼🌻</div><div class="flower-ribbon">축<br>개<br>업</div></div>
+      
       <div class="open-shop"><div class="open-shop-sign">{safe_name}</div><div class="open-awning"></div>
-      <div class="open-interior"><span class="open-badge">문 열었습니다</span><p>정성을 담아 준비한 가게<br>오늘부터 새로운 시작입니다.</p><span aria-hidden="true">🪴　 🪑　 ☕　 🪴</span></div></div>
-      <div class="flower-stand"><div class="flower-ring">🎀<br>🌸🌼<br>🌺🌷🌼<br>🌻🌸🌻<br>🌼🌺🌷🌼<br>🌸🌻🌺🌸</div><div class="flower-ribbon">응<br>원<br>합<br>니<br>다</div></div>
-    </div><div class="opening-message">준비하며 쌓은 고민과 노력이<br>이 가게만의 이야기가 되길 바랍니다.<br>사장님의 첫걸음을 응원해요!</div></section>""",unsafe_allow_html=True)
+      <div class="open-interior"><span class="open-badge">문 열었습니다</span><p>정성을 담아 준비한 가게<br>오늘부터 새로운 시작입니다.</p><span aria-hidden="true">🪴　☕　🪴</span></div></div>
+      
+    </div><div class='guest-plaza' aria-label='가게 앞에 모인 손님들'>{people}</div><div class="opening-message">준비하며 쌓은 고민과 노력이<br>이 가게만의 이야기가 되길 바랍니다.<br>사장님의 첫걸음을 응원해요!</div></section>""",unsafe_allow_html=True)
     if st.session_state.pop('celebrate_once',False): st.balloons()
-    st.caption('앱 안에서 개업을 기념하는 화면이에요. 실제 신고·인허가 완료를 의미하지 않아요.')
+    st.caption('손님들은 개업을 축하하는 장식 일러스트예요. 실제 방문객 수나 매출을 나타내지 않으며, 신고·인허가 완료를 의미하지 않아요.')
     if st.button('준비 목록과 메모 다시 보기',use_container_width=True): move(5)
 
 if step!=0:
