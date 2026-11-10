@@ -201,15 +201,27 @@ st.markdown("""<style>
 </style>""",unsafe_allow_html=True)
 @st.dialog('사장님, 반가워요')
 def login_dialog():
-    st.caption('이름만 입력하는 체험용 로그인이에요. 실제 계정 인증은 아니에요.')
+    st.caption('처음 쓰는 이름은 네 자리 비밀번호로 등록돼요. 같은 접속 세션에서만 확인하는 체험 기능이에요.')
     with st.form('demo_login'):
-        owner=st.text_input('어떻게 불러 드릴까요?',max_chars=24,placeholder='예: 민수')
+        owner=st.text_input('이름',max_chars=24,placeholder='예: 민수')
+        pin=st.text_input('숫자 네 자리 비밀번호',type='password',max_chars=4,placeholder='숫자 4자리')
         if st.form_submit_button('로그인',use_container_width=True):
-            if owner.strip():
+            if owner.strip() and len(pin)==4 and pin.isascii() and pin.isdigit():
+                import hashlib, secrets, hmac
+                accounts=st.session_state.setdefault('demo_accounts',{})
+                existing=accounts.get(owner.strip())
+                if existing:
+                    digest=hashlib.pbkdf2_hmac('sha256',pin.encode(),bytes.fromhex(existing['salt']),100000).hex()
+                    if not hmac.compare_digest(digest,existing['digest']):
+                        st.error('비밀번호가 맞지 않아요.')
+                        return
+                else:
+                    salt=secrets.token_bytes(16)
+                    accounts[owner.strip()]={'salt':salt.hex(),'digest':hashlib.pbkdf2_hmac('sha256',pin.encode(),salt,100000).hex()}
                 st.session_state['demo_owner']=owner.strip()
                 st.rerun()
-            else: st.warning('이름을 입력해 주세요.')
-    st.caption('이름과 준비 내용은 현재 접속 세션에서만 유지돼요.')
+            else: st.warning('이름과 숫자 네 자리 비밀번호를 입력해 주세요.')
+    st.caption('계정과 비밀번호 설정은 현재 세션에서만 유지돼요. 실제 회원 인증이나 점포별 접근 보호는 제공하지 않아요.')
 
 # 아이콘 폰트가 레트로 글꼴로 덮이지 않도록 복원합니다.
 st.markdown("""<style>
@@ -233,7 +245,7 @@ with account_right:
                 st.session_state.pop('demo_owner',None)
                 st.rerun()
         else:
-            if st.button('이름으로 로그인',key='account_login',use_container_width=True): login_dialog()
+            if st.button('로그인 / 등록',key='account_login',use_container_width=True): login_dialog()
 
 with st.sidebar:
     st.header('연결 설정')
@@ -344,6 +356,25 @@ if step==0:
     @keyframes needle-seek{0%,100%{transform:rotate(22deg)}30%{transform:rotate(-24deg)}65%{transform:rotate(48deg)}}
     @media(max-width:640px){.brand-lockup{gap:12px}.home-shutter .name{font-size:clamp(35px,9.5vw,62px)!important}.vintage-compass{width:clamp(72px,20vw,110px);border-width:5px}.home-shutter .small{font-size:clamp(21px,5.5vw,29px)!important}.home-shutter p{font-size:clamp(19px,4.7vw,26px)!important}}
     @media(prefers-reduced-motion:reduce){.compass-needle{animation:none;transform:rotate(22deg)}}
+    </style>""",unsafe_allow_html=True)
+    st.markdown("""<style>
+    .block-container{padding-top:0!important;padding-bottom:6px!important}
+    .home-shutter{height:38svh!important;min-height:140px!important;margin:0!important;padding:6px 12px!important}
+    .brand-lockup{margin:6px 0 10px!important;gap:18px!important}
+    .home-shutter .name{font-size:clamp(42px,min(10vw,12svh),125px)!important;line-height:1.15!important}
+    .vintage-compass{width:clamp(65px,min(14vw,17svh),155px)!important}
+    .home-shutter .small{font-size:clamp(18px,3.3svh,30px)!important;margin-bottom:3px!important}
+    .home-shutter p{font-size:clamp(17px,3.2svh,28px)!important;line-height:1.25!important}
+    [data-testid="stHorizontalBlock"]{padding:3px 5vw 6px!important;gap:10px!important}
+    [data-testid="stVerticalBlock"]{gap:6px!important}
+    .stButton>button{min-height:58px!important;padding:8px 14px!important}
+    .stButton>button p{font-size:clamp(25px,3vw,36px)!important;line-height:1.2!important}
+    @media(max-width:640px){.home-shutter{height:32svh!important}.home-shutter .name{font-size:clamp(32px,8.6vw,56px)!important}.vintage-compass{width:70px!important}.home-shutter .small{font-size:19px!important}.home-shutter p{font-size:17px!important}.stButton>button{min-height:52px!important}.stButton>button p{font-size:26px!important}}
+    /* ポップアップはホームの巨大ボタン指定から独立させる */
+    [data-testid="stPopoverBody"] .stButton>button,[role="dialog"] .stButton>button{font-size:17px!important;min-height:40px!important;padding:7px 12px!important;box-shadow:none!important}
+    [data-testid="stPopoverBody"] .stButton>button p,[role="dialog"] .stButton>button p{font-size:17px!important;line-height:1.4!important}
+    [role="dialog"] [data-testid="stFormSubmitButton"] button{font-size:17px!important;min-height:42px!important}
+    [role="dialog"] [data-testid="stFormSubmitButton"] button p{font-size:17px!important}
     </style>""",unsafe_allow_html=True)
     left,right=st.columns(2)
     with left:
