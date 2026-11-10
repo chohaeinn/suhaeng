@@ -208,32 +208,28 @@ if step==0:
     .home-card-title{display:flex;align-items:center;gap:10px;color:#284f42;font-size:23px;font-family:'Do Hyeon',sans-serif;margin:6px 0 12px}
     .home-icon{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid #355749;font:18px sans-serif;flex-shrink:0;background:#c4ddd0}
     </style><div class='home-shutter'><div class='small'>나만의 가게를 여는 첫걸음</div><div class='name'>창업 나침반</div><p>동네를 찾고, 가게를 구상하고, 문을 여는 날까지.</p></div>""",unsafe_allow_html=True)
-    left,right=st.columns(2,gap='large')
+    # 별도 카드/설명 없이 셔터 아래의 두 글자 버튼만 진입점으로 유지.
+    st.markdown("""<style>
+    .block-container{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;max-width:100%!important}
+    .home-shutter{margin:0!important;min-height:70vh;display:flex;flex-direction:column;justify-content:center;border:0!important;box-shadow:none!important;padding:60px 20px 35px!important}
+    .home-shutter .name{font-size:clamp(68px,12vw,160px)!important;letter-spacing:.06em!important}
+    .home-shutter .small{font-size:clamp(17px,2vw,25px)!important}
+    .home-shutter p{font-size:clamp(18px,2.4vw,29px)!important}
+    [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"]{display:none!important}
+    [data-testid="stHorizontalBlock"]{padding:15px 6vw 30px!important;gap:20px!important}
+    .stButton>button{background:transparent!important;border:0!important;box-shadow:none!important;color:#214b3e!important;font-family:'Do Hyeon',sans-serif!important;font-size:clamp(22px,3vw,36px)!important;min-height:68px!important}
+    .stButton>button p{font-size:inherit!important}
+    .stButton>button:hover{color:#102e24!important;text-decoration:underline}
+    </style>""",unsafe_allow_html=True)
+    left,right=st.columns(2)
     with left:
-        st.markdown("<div class='home-card-title'><span class='home-icon'>▣</span>나의 점포</div>",unsafe_allow_html=True)
-        st.write('준비하던 가게를 이어서 살펴보세요.')
-    with right:
-        st.markdown("<div class='home-card-title'><span class='home-icon'>＋</span>새 점포</div>",unsafe_allow_html=True)
-        st.write('새로운 가게의 첫걸음을 시작하세요.')
-    if st.session_state.get('result'):
-        confirm=st.checkbox('기존 준비 내용을 초기화하고 새로 시작할게요.')
-    else:
-        confirm=True
-    action_left,action_right=st.columns(2,gap='large')
-    with action_left:
         if st.button('나의 점포 보기',use_container_width=True):
             if st.session_state.get('result'): move(5)
-            else: st.info('아직 준비 중인 점포가 없어요. 새 점포를 만들어 주세요.')
-    with action_right:
-        if st.button('새 점포 만들기',type='primary',use_container_width=True):
-            if st.session_state.get('result') and not confirm:
-                st.warning('기존 메모를 내려받은 뒤 초기화 항목에 체크해 주세요.')
-            else:
-                keep={k:v for k,v in st.session_state.items() if k in ['baze_base','baze_model']}
-                st.session_state.clear()
-                st.session_state.update(keep)
-                move(1)
-    st.caption('점포 정보는 현재 접속 중에만 유지돼요.')
+            else: st.info('아직 준비 중인 점포가 없어요. 새 점포 만들기를 눌러 주세요.')
+    with right:
+        if st.button('새 점포 만들기',use_container_width=True):
+            # 기존 준비 내용을 지우지 않고 첫 단계로 이동합니다.
+            move(1)
     st.stop()
 
 if step==1:
