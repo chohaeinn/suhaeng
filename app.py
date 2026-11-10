@@ -711,14 +711,16 @@ if step==6:
     colors=['#355e53','#c27d51','#a2bca9','#b85848','#788eaa','#c4a759']
     people=''.join("<span class='guest' style='--coat:"+colors[i%len(colors)]+";--skin:"+['#edc39f','#d6a47e','#b97e58'][i%3]+";--delay:"+str((i%7)*-.3)+"s'><i class='guest-head'></i><i class='guest-body'></i><i class='guest-legs'></i></span>" for i in range(24))
 
-    st.markdown(f"""<section class="opening-scene" aria-label="문을 연 가게 앞에 손님이 모여 있는 개업 축하 장면">
+    opening_html=f"""<section class="opening-scene" aria-label="문을 연 가게 앞에 손님이 모여 있는 개업 축하 장면">
     <div class="opening-banner">✦ 개업을 진심으로 축하합니다 ✦</div>
     <div class="opening-row">
       
       <div class="open-shop"><div class="open-shop-sign">{safe_name}</div><div class="open-awning"></div>
       <div class="open-interior"><span class="open-badge">문 열었습니다</span><p>정성을 담아 준비한 가게<br>오늘부터 새로운 시작입니다.</p><span aria-hidden="true">🪴　☕　🪴</span></div></div>
       
-    </div><div class='guest-plaza' aria-label='가게 앞에 모인 손님들'>{people}</div><div class="opening-message">준비하며 쌓은 고민과 노력이<br>이 가게만의 이야기가 되길 바랍니다.<br>사장님의 첫걸음을 응원해요!</div></section>""",unsafe_allow_html=True)
+    </div><div class='guest-plaza' aria-label='가게 앞에 모인 손님들'>{people}</div><div class="opening-message">준비하며 쌓은 고민과 노력이<br>이 가게만의 이야기가 되길 바랍니다.<br>사장님의 첫걸음을 응원해요!</div></section>"""
+    # HTML 줄의 들여쓰기가 Markdown 코드 블록으로 해석되지 않게 한 줄로 결합
+    st.markdown("".join(line.strip() for line in opening_html.splitlines()),unsafe_allow_html=True)
     if st.session_state.pop('celebrate_once',False): st.balloons()
     st.caption('손님들은 개업을 축하하는 장식 일러스트예요. 실제 방문객 수나 매출을 나타내지 않으며, 신고·인허가 완료를 의미하지 않아요.')
     if st.button('준비 목록과 메모 다시 보기',use_container_width=True): move(5)
