@@ -211,6 +211,19 @@ def login_dialog():
             else: st.warning('이름을 입력해 주세요.')
     st.caption('이름과 준비 내용은 현재 접속 세션에서만 유지돼요.')
 
+# 아이콘 폰트가 레트로 글꼴로 덮이지 않도록 복원합니다.
+st.markdown("""<style>
+[data-testid="stIconMaterial"], [data-testid="stIconMaterial"] span,
+.material-symbols-rounded, .material-symbols-outlined{
+font-family:'Material Symbols Rounded'!important;font-weight:400!important;
+font-style:normal!important;font-size:24px!important;line-height:1!important;
+letter-spacing:normal!important;text-transform:none!important;white-space:nowrap!important;
+word-wrap:normal!important;direction:ltr!important;font-feature-settings:'liga'!important;
+-webkit-font-feature-settings:'liga'!important;-webkit-font-smoothing:antialiased;
+}
+[data-testid="stPopover"] button{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;min-height:46px!important;height:auto!important;padding:10px 16px!important}
+[data-testid="stPopover"] button p{margin:0!important;line-height:1.4!important;white-space:nowrap!important;font-size:20px!important}
+</style>""",unsafe_allow_html=True)
 account_left,account_right=st.columns([5,2])
 with account_right:
     with st.popover((st.session_state.get('demo_owner','')+' 사장님') if st.session_state.get('demo_owner') else '로그인',use_container_width=True):
@@ -282,7 +295,7 @@ if step==0:
     /* 배경 셔터 하나만 남기고 제목 영역의 별도 철판은 제거 */
     .home-shutter{background:transparent!important;border:0!important;box-shadow:none!important}
     .home-shutter:after{display:none!important}
-    .stApp, .stApp p, .stApp label, .stApp button, .stApp input, .stApp textarea, .stApp h1, .stApp h2, .stApp h3, .stApp span{font-family:'Do Hyeon','Malgun Gothic',sans-serif!important;font-weight:400!important}
+    .stApp, .stApp p, .stApp label, .stApp button, .stApp input, .stApp textarea, .stApp h1, .stApp h2, .stApp h3{font-family:'Do Hyeon','Malgun Gothic',sans-serif!important;font-weight:400!important}
     .stButton>button{background:#dfdcc8!important;border:3px solid #35594b!important;border-radius:5px!important;box-shadow:4px 5px 0 #35594b!important;padding:18px 24px!important;color:#254c3e!important;min-height:86px!important;text-decoration:none!important}
     .stButton>button:hover{background:#c8ddca!important;transform:translateY(-2px);text-decoration:none!important}
     .stButton>button:active{transform:translate(3px,3px);box-shadow:1px 2px 0 #35594b!important}
