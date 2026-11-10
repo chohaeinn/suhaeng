@@ -120,10 +120,11 @@ def move(n):
 
 st.session_state.setdefault('step',0)
 step=st.session_state['step']
-st.title('🧭 창업 나침반')
-st.caption('어떤 가게를 열고 싶으세요? 동네를 고르는 일부터 함께 준비해요.')
+if step!=0:
+    st.title('🧭 창업 나침반')
+    st.caption('어떤 가게를 열고 싶으세요? 동네를 고르는 일부터 함께 준비해요.')
 visible_step={1:1,2:2,4:3,5:4,6:4}.get(step,2)
-st.progress(visible_step/4,text=f'{visible_step} / 4 · '+['가게 정하기','동네 고르기','후보 살펴보기','개업 준비'][visible_step-1])
+if step!=0: st.progress(visible_step/4,text=f'{visible_step} / 4 · '+['가게 정하기','동네 고르기','후보 살펴보기','개업 준비'][visible_step-1])
 # 단계에 따라 철제 셔터가 올라가는 배경. 입력 요소와 지도는 항상 전면에 유지.
 shutter_height=100 if step==0 else 0 if step==6 else {1:100,2:72,3:40,4:5}[visible_step]
 previous=st.session_state.get('_shutter_height',100)
@@ -196,13 +197,17 @@ def choose_word(word):
 
 if step==0:
     st.markdown("""<style>
-    .home-sign{text-align:center;background:#e9e1ca;border:3px solid #355749;padding:32px 18px;margin:12px 0 24px;box-shadow:4px 4px 0 #355749}
-    .home-sign .small{letter-spacing:.25em;font-size:13px;color:#556350}
-    .home-sign .name{font-family:'Do Hyeon',sans-serif;font-size:42px;color:#284f42;margin:10px 0}
-    .home-sign p{margin:8px 0;color:#4a594c}
+    /* 홈에서는 일반 페이지 제목/진행 표시 대신 셔터 자체를 메인 간판으로 사용 */
+    .block-container>div [data-testid="stHeadingWithActionElements"]:has(h1){display:none!important}
+    [data-testid="stProgress"]{display:none!important}
+    .home-shutter{position:relative;text-align:center;margin:8px 0 28px;padding:64px 18px 58px;border-top:9px solid #68716c;border-bottom:12px solid #59655f;background:repeating-linear-gradient(180deg,#b6bbb7 0px,#c5c9c5 7px,#b1b7b2 17px,#939d96 19px,#e0e1da 21px,#b6bbb7 24px);box-shadow:inset 7px 0 12px #53615766,inset -7px 0 12px #53615766;overflow:hidden}
+    .home-shutter:after{content:'';display:block;width:72px;height:9px;border:3px solid #68746b;border-radius:3px;margin:32px auto 0;background:#939f96}
+    .home-shutter .small{letter-spacing:.22em;font-size:14px;color:#314e42;margin-bottom:12px}
+    .home-shutter .name{font-family:'Do Hyeon','Malgun Gothic',sans-serif;font-weight:400;font-size:clamp(46px,8vw,90px);line-height:1.3;color:#204d40;letter-spacing:.08em;text-shadow:2px 2px 0 #e8e3c5,4px 4px 0 #62776b;transform:rotate(-2deg);margin:10px 0 18px}
+    .home-shutter p{font-size:16px;color:#29493b;margin:0;font-weight:500}
     .home-card-title{display:flex;align-items:center;gap:10px;color:#284f42;font-size:23px;font-family:'Do Hyeon',sans-serif;margin:6px 0 12px}
     .home-icon{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid #355749;font:18px sans-serif;flex-shrink:0;background:#c4ddd0}
-    </style><div class='home-sign'><div class='small'>동네에서 시작하는 나의 가게</div><div class='name'>골목 창업 상회</div><p>가게를 꿈꾸는 순간부터, 문을 여는 날까지.</p></div>""",unsafe_allow_html=True)
+    </style><div class='home-shutter'><div class='small'>나만의 가게를 여는 첫걸음</div><div class='name'>창업 나침반</div><p>동네를 찾고, 가게를 구상하고, 문을 여는 날까지.</p></div>""",unsafe_allow_html=True)
     left,right=st.columns(2,gap='large')
     with left:
         st.markdown("<div class='home-card-title'><span class='home-icon'>▣</span>나의 점포</div>",unsafe_allow_html=True)
@@ -544,4 +549,4 @@ if step==6:
     if st.button('준비 목록과 메모 다시 보기',use_container_width=True): move(5)
 
 if step!=0:
-    if st.button('처음 화면 · 골목 창업 상회',key='return_home'): move(0)
+    if st.button('처음 화면 · 창업 나침반',key='return_home'): move(0)
