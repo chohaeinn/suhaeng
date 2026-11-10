@@ -37,6 +37,26 @@ def search(key,query,lat=None,lon=None,radius=None,category=False):
         if meta.get('total_count',0)>meta.get('pageable_count',45): limited=True
     return list(out.values()),limited
 
+def detailed_search(key,term,lat,lon,radius):
+    docs,limited=search(key,term,lat,lon,radius)
+    found={d['id']:d for d in docs}
+    # 결과가 없거나 잘렸을 때 작은 구역을 추가 조회. 서비스의 검색 한도 자체를 해제하지는 않음.
+    if limited or not docs:
+        child=max(100,int(radius*0.72))
+        flags=[]
+        for dy,dx in [(0.42,0.42),(0.42,-0.42),(-0.42,0.42),(-0.42,-0.42)]:
+            y=lat+dy*radius/111320
+            x=lon+dx*radius/(111320*math.cos(math.radians(lat)))
+            extra,cut=search(key,term,y,x,child)
+            flags.append(cut)
+            for d in extra:
+                y2=float(d['y']);x2=float(d['x'])
+                distance=math.hypot((y2-lat)*111320,(x2-lon)*111320*math.cos(math.radians(lat)))
+                if distance<=radius: found[d['id']]=d
+        # 세분 조회로도 전체 수집이 보장되지 않으므로 원래 제한 표시 유지
+        limited=limited or any(flags)
+    return list(found.values()),limited
+
 def baze_request(key,payload,timeout=75):
     from urllib.parse import urlsplit
     base=str(st.session_state.get('baze_base','')).strip().rstrip('/')
@@ -101,6 +121,16 @@ BRAND_GROUPS = [
     {'terms':['김밥'], 'brands':['고봉민김밥','바르다김선생','김가네','김밥천국']}
 ]
 
+BRAND_GROUPS.extend([
+    {'terms':['샐러드','포케'],'brands':['슬로우캘리','포케올데이','포케웍스','샐러디','크리스피프레시']},
+    {'terms':['카페','커피'],'brands':['메가MGC커피','컴포즈커피','빽다방','더벤티','하삼동커피','텐퍼센트커피','매머드커피','커피빈','폴바셋']},
+    {'terms':['돈가스','돈까스','돈카츠','카츠','경양식'],'brands':['돈까스클럽','이백장돈가스','오유미당','무공돈까스','카츠백','은화수식당']},
+    {'terms':['치킨'],'brands':['굽네치킨','푸라닭','자담치킨','노랑통닭','처갓집양념치킨','호식이두마리치킨']},
+    {'terms':['햄버거','버거'],'brands':['맥도날드','롯데리아','버거킹','맘스터치','노브랜드버거','프랭크버거']},
+    {'terms':['피자'],'brands':['도미노피자','피자헛','피자스쿨','피자알볼로','반올림피자']},
+    {'terms':['베이커리','빵','제과'],'brands':['파리바게뜨','뚜레쥬르','이삭토스트','홍루이젠']}
+])
+
 def brands_for(terms):
     wanted={normalize(t) for t in terms}
     return list(dict.fromkeys(brand for group in BRAND_GROUPS if wanted.intersection(normalize(t) for t in group['terms']) for brand in group['brands']))
@@ -117,6 +147,20 @@ def relevant(place, terms):
 def move(n):
     st.session_state['step']=n
     st.rerun()
+
+if not st.session_state.get('demo_owner'):
+    st.title('창업 나침반')
+    st.subheader('사장님, 반가워요')
+    st.caption('이름만 입력하는 체험용 입장이에요. 실제 회원가입이나 본인 인증은 아니에요.')
+    with st.form('demo_login'):
+        owner=st.text_input('어떻게 불러 드릴까요?',max_chars=24,placeholder='예: 민수')
+        if st.form_submit_button('우리 가게 준비하러 가기',use_container_width=True):
+            if owner.strip():
+                st.session_state['demo_owner']=owner.strip()
+                st.rerun()
+            else: st.warning('이름을 입력해 주세요.')
+    st.caption('이름과 점포 정보는 현재 접속 중에만 유지되며, 별도 계정으로 보호되지 않아요.')
+    st.stop()
 
 st.session_state.setdefault('step',0)
 step=st.session_state['step']
@@ -169,6 +213,7 @@ st.markdown("""<style>
 .stApp, .stApp p, .stApp label, .stApp button, .stApp input, .stApp textarea, .stApp h1, .stApp h2, .stApp h3, .stApp h4{font-family:'Do Hyeon','Malgun Gothic',sans-serif!important;font-weight:400!important}
 .stApp p,.stApp label{line-height:1.65}
 </style>""",unsafe_allow_html=True)
+st.caption(st.session_state['demo_owner']+' 사장님, 오늘도 한 걸음씩 준비해요.')
 with st.sidebar:
     st.header('연결 설정')
     kakao=(st.text_input('카카오 REST API 키',type='password') or secret('KAKAO_REST_API_KEY')).strip()
@@ -376,7 +421,7 @@ if step==2:
                         queries=list(dict.fromkeys(st.session_state['terms']+st.session_state.get('brand_terms',[])))
                         if len(queries)>12: raise ValueError('검색어와 브랜드를 합쳐 12개 이하로 줄여 주세요.')
                         for term in queries:
-                            docs,trunc=search(kakao,term,lat,lon,radius)
+                            docs,trunc=detailed_search(kakao,term,lat,lon,radius)
                             # 각 검색 요청의 검색어와 일치하는 결과만 허용.
                             for d in docs:
                                 if relevant(d,st.session_state['terms']+[term]): shops[d['id']]=d
@@ -604,3 +649,7 @@ if step==6:
 
 if step!=0:
     if st.button('처음 화면 · 창업 나침반',key='return_home'): move(0)
+
+if st.button('체험 종료 · 이름 바꾸기',key='demo_logout'):
+    st.session_state.clear()
+    st.rerun()
