@@ -148,20 +148,6 @@ def move(n):
     st.session_state['step']=n
     st.rerun()
 
-if not st.session_state.get('demo_owner'):
-    st.title('창업 나침반')
-    st.subheader('사장님, 반가워요')
-    st.caption('이름만 입력하는 체험용 입장이에요. 실제 회원가입이나 본인 인증은 아니에요.')
-    with st.form('demo_login'):
-        owner=st.text_input('어떻게 불러 드릴까요?',max_chars=24,placeholder='예: 민수')
-        if st.form_submit_button('우리 가게 준비하러 가기',use_container_width=True):
-            if owner.strip():
-                st.session_state['demo_owner']=owner.strip()
-                st.rerun()
-            else: st.warning('이름을 입력해 주세요.')
-    st.caption('이름과 점포 정보는 현재 접속 중에만 유지되며, 별도 계정으로 보호되지 않아요.')
-    st.stop()
-
 st.session_state.setdefault('step',0)
 step=st.session_state['step']
 if step!=0:
@@ -213,7 +199,29 @@ st.markdown("""<style>
 .stApp, .stApp p, .stApp label, .stApp button, .stApp input, .stApp textarea, .stApp h1, .stApp h2, .stApp h3, .stApp h4{font-family:'Do Hyeon','Malgun Gothic',sans-serif!important;font-weight:400!important}
 .stApp p,.stApp label{line-height:1.65}
 </style>""",unsafe_allow_html=True)
-st.caption(st.session_state['demo_owner']+' 사장님, 오늘도 한 걸음씩 준비해요.')
+@st.dialog('사장님, 반가워요')
+def login_dialog():
+    st.caption('이름만 입력하는 체험용 로그인이에요. 실제 계정 인증은 아니에요.')
+    with st.form('demo_login'):
+        owner=st.text_input('어떻게 불러 드릴까요?',max_chars=24,placeholder='예: 민수')
+        if st.form_submit_button('로그인',use_container_width=True):
+            if owner.strip():
+                st.session_state['demo_owner']=owner.strip()
+                st.rerun()
+            else: st.warning('이름을 입력해 주세요.')
+    st.caption('이름과 준비 내용은 현재 접속 세션에서만 유지돼요.')
+
+account_left,account_right=st.columns([5,2])
+with account_right:
+    with st.popover((st.session_state.get('demo_owner','')+' 사장님') if st.session_state.get('demo_owner') else '로그인',use_container_width=True):
+        if st.session_state.get('demo_owner'):
+            st.write(st.session_state['demo_owner']+' 사장님, 반가워요.')
+            if st.button('로그아웃',key='account_logout'):
+                st.session_state.pop('demo_owner',None)
+                st.rerun()
+        else:
+            if st.button('이름으로 로그인',key='account_login',use_container_width=True): login_dialog()
+
 with st.sidebar:
     st.header('연결 설정')
     kakao=(st.text_input('카카오 REST API 키',type='password') or secret('KAKAO_REST_API_KEY')).strip()
@@ -650,6 +658,4 @@ if step==6:
 if step!=0:
     if st.button('처음 화면 · 창업 나침반',key='return_home'): move(0)
 
-if st.button('체험 종료 · 이름 바꾸기',key='demo_logout'):
-    st.session_state.clear()
-    st.rerun()
+
