@@ -211,7 +211,7 @@ if step==0:
     .home-shutter p{font-size:16px;color:#29493b;margin:0;font-weight:500}
     .home-card-title{display:flex;align-items:center;gap:10px;color:#284f42;font-size:23px;font-family:'Do Hyeon',sans-serif;margin:6px 0 12px}
     .home-icon{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid #355749;font:18px sans-serif;flex-shrink:0;background:#c4ddd0}
-    </style><div class='home-shutter'><div class='small'>나만의 가게를 여는 첫걸음</div><div class='name'>창업 나침반</div><p>동네를 찾고, 가게를 구상하고, 문을 여는 날까지.</p></div>""",unsafe_allow_html=True)
+    </style><div class='home-shutter'><div class='small'>나만의 가게를 여는 첫걸음</div><div class='brand-lockup'><div class='name'>창업 나침반</div><div class='vintage-compass' role='img' aria-label='움직이는 바늘이 있는 복고풍 나침반'><span class='north'>N</span><span class='south'>S</span><span class='west'>W</span><span class='east'>E</span><div class='compass-needle'></div><div class='compass-pin'></div></div></div><p>동네를 찾고, 가게를 구상하고, 문을 여는 날까지.</p></div>""",unsafe_allow_html=True)
     # 별도 카드/설명 없이 셔터 아래의 두 글자 버튼만 진입점으로 유지.
     st.markdown("""<style>
     .block-container{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;max-width:100%!important}
@@ -255,6 +255,29 @@ if step==0:
       .stButton>button{min-height:56px!important;padding:6px 14px!important}
       .stButton>button p{font-size:30px!important}
     }
+    </style>""",unsafe_allow_html=True)
+    st.markdown("""<style>
+    .home-shutter .name{font-family:'Do Hyeon','Malgun Gothic',sans-serif!important;font-size:clamp(64px,min(13vw,17svh),180px)!important;letter-spacing:.025em!important;white-space:nowrap}
+    .home-shutter .small{font-family:'Do Hyeon','Malgun Gothic',sans-serif!important;font-weight:400!important;font-size:clamp(22px,min(3.6vw,4svh),36px)!important;letter-spacing:.08em!important;color:#254f40!important;text-shadow:1px 1px 0 #e7e0c5;transform:rotate(-1deg);margin-bottom:12px!important}
+    .home-shutter p{font-family:'Do Hyeon','Malgun Gothic',sans-serif!important;font-size:clamp(20px,min(3.5vw,4svh),36px)!important;line-height:1.35!important}
+    @media(max-width:640px){.home-shutter .name{font-size:clamp(44px,12vw,78px)!important}.home-shutter .small{font-size:clamp(19px,4.8vw,27px)!important}.home-shutter p{font-size:clamp(17px,4.2vw,24px)!important}}
+    </style>""",unsafe_allow_html=True)
+    st.markdown("""<style>
+    .brand-lockup{display:flex;align-items:center;justify-content:center;gap:clamp(15px,3vw,48px);margin:14px 0 22px}
+    .home-shutter .name{font-size:clamp(58px,min(10.7vw,17svh),172px)!important;margin:0!important}
+    .home-shutter .small{font-family:'Do Hyeon','Malgun Gothic',sans-serif!important;font-size:clamp(25px,min(4.2vw,4.6svh),44px)!important;letter-spacing:.04em!important;text-shadow:1px 2px 0 #e6dfc3!important}
+    .home-shutter p{font-size:clamp(22px,min(3.9vw,4.7svh),40px)!important}
+    .vintage-compass{position:relative;flex-shrink:0;width:clamp(110px,16vw,210px);aspect-ratio:1;border-radius:50%;box-sizing:border-box;border:9px solid #9b7a45;background:repeating-conic-gradient(from -1deg,#355547 0deg 1deg,transparent 1deg 10deg),radial-gradient(circle,#e4d6ad 0%,#ece1c0 68%,#a68d57 70%);box-shadow:inset 0 0 0 4px #d8c28b,inset 0 0 15px #806938,4px 6px 0 #354f4266;color:#2c5142}
+    .vintage-compass:before{content:'';position:absolute;inset:17%;border-radius:50%;background:#e8dcba;border:1px solid #8b805b}
+    .vintage-compass span{position:absolute;font-family:Georgia,serif!important;font-weight:bold!important;font-size:clamp(14px,2vw,24px);z-index:2;line-height:1}
+    .vintage-compass .north{top:9%;left:50%;transform:translateX(-50%);color:#8b4337}.vintage-compass .south{bottom:8%;left:50%;transform:translateX(-50%)}.vintage-compass .west{left:8%;top:50%;transform:translateY(-50%)}.vintage-compass .east{right:9%;top:50%;transform:translateY(-50%)}
+    .compass-needle{position:absolute;inset:18% 42%;z-index:3;animation:needle-seek 7s ease-in-out infinite;transform-origin:50% 50%;filter:drop-shadow(2px 2px 1px #554b3f88)}
+    .compass-needle:before,.compass-needle:after{content:'';position:absolute;left:0;right:0;height:50%;clip-path:polygon(50% 0,100% 100%,0 100%)}
+    .compass-needle:before{top:0;background:linear-gradient(90deg,#8a3f36 50%,#b96b50 50%)}.compass-needle:after{bottom:0;transform:rotate(180deg);background:linear-gradient(90deg,#264c40 50%,#587365 50%)}
+    .compass-pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:15%;height:15%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ead69b,#98733d);border:2px solid #655437;z-index:4}
+    @keyframes needle-seek{0%,100%{transform:rotate(22deg)}30%{transform:rotate(-24deg)}65%{transform:rotate(48deg)}}
+    @media(max-width:640px){.brand-lockup{gap:12px}.home-shutter .name{font-size:clamp(35px,9.5vw,62px)!important}.vintage-compass{width:clamp(72px,20vw,110px);border-width:5px}.home-shutter .small{font-size:clamp(21px,5.5vw,29px)!important}.home-shutter p{font-size:clamp(19px,4.7vw,26px)!important}}
+    @media(prefers-reduced-motion:reduce){.compass-needle{animation:none;transform:rotate(22deg)}}
     </style>""",unsafe_allow_html=True)
     left,right=st.columns(2)
     with left:
