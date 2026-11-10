@@ -234,13 +234,35 @@ if step==0:
     .stButton>button:hover{background:#c8ddca!important;transform:translateY(-2px);text-decoration:none!important}
     .stButton>button:active{transform:translate(3px,3px);box-shadow:1px 2px 0 #35594b!important}
     </style>""",unsafe_allow_html=True)
+    st.markdown("""<style>
+    .block-container{padding-top:0!important;padding-bottom:12px!important}
+    .home-shutter{min-height:0!important;height:58svh!important;padding:16px 12px!important;box-sizing:border-box}
+    .home-shutter .name{font-size:clamp(56px,min(11vw,14svh),148px)!important;margin:6px 0 12px!important}
+    .home-shutter .small{margin-bottom:8px!important;font-size:clamp(15px,2.2svh,23px)!important}
+    .home-shutter p{font-size:clamp(15px,2.7svh,25px)!important}
+    [data-testid="stHorizontalBlock"]{padding:8px 6vw 16px!important;gap:16px!important}
+    .stButton>button{min-height:76px!important;padding:12px 18px!important;font-size:clamp(28px,3.5vw,44px)!important}
+    .stButton>button p{font-size:clamp(28px,3.5vw,44px)!important;line-height:1.25!important}
+    @media(max-width:640px){
+      .home-shutter{height:48svh!important}
+      [data-testid="stHorizontalBlock"]{gap:10px!important;padding:4px 6vw 10px!important}
+      .stButton>button{min-height:62px!important;padding:10px!important}
+      .stButton>button p{font-size:28px!important}
+    }
+    @media(max-height:550px) and (min-width:641px){
+      .home-shutter{height:50svh!important;padding:6px!important}
+      .home-shutter .name{font-size:clamp(42px,12svh,72px)!important}
+      .stButton>button{min-height:56px!important;padding:6px 14px!important}
+      .stButton>button p{font-size:30px!important}
+    }
+    </style>""",unsafe_allow_html=True)
     left,right=st.columns(2)
     with left:
         if st.button('나의 점포 보기',use_container_width=True):
             if st.session_state.get('result'): move(5)
             else: st.info('아직 준비 중인 점포가 없어요. 새 점포 만들기를 눌러 주세요.')
     with right:
-        if st.button('새 점포 만들기',use_container_width=True):
+        if st.button('새 점포 생성하기',use_container_width=True):
             # 기존 준비 내용을 지우지 않고 첫 단계로 이동합니다.
             move(1)
     st.stop()
