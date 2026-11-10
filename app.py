@@ -125,7 +125,7 @@ st.caption('어떤 가게를 열고 싶으세요? 동네를 고르는 일부터 
 visible_step={1:1,2:2,4:3,5:4,6:4}.get(step,2)
 st.progress(visible_step/4,text=f'{visible_step} / 4 · '+['가게 정하기','동네 고르기','후보 살펴보기','개업 준비'][visible_step-1])
 # 단계에 따라 철제 셔터가 올라가는 배경. 입력 요소와 지도는 항상 전면에 유지.
-shutter_height=0 if step==6 else {1:100,2:72,3:40,4:5}[visible_step]
+shutter_height=100 if step==0 else 0 if step==6 else {1:100,2:72,3:40,4:5}[visible_step]
 previous=st.session_state.get('_shutter_height',100)
 st.session_state['_shutter_height']=shutter_height
 st.markdown("""<style>
@@ -162,6 +162,8 @@ h2{font-size:1.9rem!important}h3{font-size:1.45rem!important}
 shutter_labels=['가게 구상 중','동네 둘러보는 중','자리 살펴보는 중','오픈 준비 중']
 st.markdown(f'<div class="retro-status"><span>▣ 창업 준비 상점</span><span>{shutter_labels[visible_step-1]} · 셔터 {min(100,int((100-shutter_height)/95*100))}% 열림</span></div>',unsafe_allow_html=True)
 
+if step==0:
+    st.markdown("""<style>.retro-status{display:none!important}.stApp::before{animation:none!important;transform:translateY(0)!important}</style>""",unsafe_allow_html=True)
 with st.sidebar:
     st.header('연결 설정')
     kakao=(st.text_input('카카오 REST API 키',type='password') or secret('KAKAO_REST_API_KEY')).strip()
@@ -193,18 +195,31 @@ def choose_word(word):
     st.session_state['words']=', '.join(words)
 
 if step==0:
-    st.markdown("<div style='text-align:center;background:#d5e7ce;border:5px solid #486451;padding:40px 20px;border-radius:12px'><h1>골목 창업 상회</h1><p>꿈꾸던 우리 가게, 여기서 준비해요.</p><p>동네 찾기부터 개업하는 날까지</p></div>",unsafe_allow_html=True)
-    left,right=st.columns(2)
+    st.markdown("""<style>
+    .home-sign{text-align:center;background:#e9e1ca;border:3px solid #355749;padding:32px 18px;margin:12px 0 24px;box-shadow:4px 4px 0 #355749}
+    .home-sign .small{letter-spacing:.25em;font-size:13px;color:#556350}
+    .home-sign .name{font-family:'Do Hyeon',sans-serif;font-size:42px;color:#284f42;margin:10px 0}
+    .home-sign p{margin:8px 0;color:#4a594c}
+    .home-card-title{display:flex;align-items:center;gap:10px;color:#284f42;font-size:23px;font-family:'Do Hyeon',sans-serif;margin:6px 0 12px}
+    .home-icon{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid #355749;font:18px sans-serif;flex-shrink:0;background:#c4ddd0}
+    </style><div class='home-sign'><div class='small'>동네에서 시작하는 나의 가게</div><div class='name'>골목 창업 상회</div><p>가게를 꿈꾸는 순간부터, 문을 여는 날까지.</p></div>""",unsafe_allow_html=True)
+    left,right=st.columns(2,gap='large')
     with left:
-        st.subheader('나의 점포 보기')
-        st.write('이번 접속에서 준비하던 가게를 이어서 살펴보세요.')
+        st.markdown("<div class='home-card-title'><span class='home-icon'>▣</span>나의 점포</div>",unsafe_allow_html=True)
+        st.write('준비하던 가게를 이어서 살펴보세요.')
+    with right:
+        st.markdown("<div class='home-card-title'><span class='home-icon'>＋</span>새 점포</div>",unsafe_allow_html=True)
+        st.write('새로운 가게의 첫걸음을 시작하세요.')
+    if st.session_state.get('result'):
+        confirm=st.checkbox('기존 준비 내용을 초기화하고 새로 시작할게요.')
+    else:
+        confirm=True
+    action_left,action_right=st.columns(2,gap='large')
+    with action_left:
         if st.button('나의 점포 보기',use_container_width=True):
             if st.session_state.get('result'): move(5)
-            else: st.info('아직 준비 중인 점포가 없어요. 오른쪽에서 새 점포를 만들어 주세요.')
-    with right:
-        st.subheader('새 점포 만들기')
-        st.write('하고 싶은 업종을 정하고 나에게 맞는 동네를 찾아보세요.')
-        confirm=st.checkbox('기존 준비 내용이 있다면 초기화하고 새로 시작할게요.')
+            else: st.info('아직 준비 중인 점포가 없어요. 새 점포를 만들어 주세요.')
+    with action_right:
         if st.button('새 점포 만들기',type='primary',use_container_width=True):
             if st.session_state.get('result') and not confirm:
                 st.warning('기존 메모를 내려받은 뒤 초기화 항목에 체크해 주세요.')
@@ -213,7 +228,7 @@ if step==0:
                 st.session_state.clear()
                 st.session_state.update(keep)
                 move(1)
-    st.caption('현재 점포 정보는 접속 세션에서만 유지돼요. 브라우저를 닫거나 세션이 끝나면 사라질 수 있어요.')
+    st.caption('점포 정보는 현재 접속 중에만 유지돼요.')
     st.stop()
 
 if step==1:
