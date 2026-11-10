@@ -376,6 +376,8 @@ if step==0:
     [role="dialog"] [data-testid="stFormSubmitButton"] button{font-size:17px!important;min-height:42px!important}
     [role="dialog"] [data-testid="stFormSubmitButton"] button p{font-size:17px!important}
     </style>""",unsafe_allow_html=True)
+    # 메인 진입 버튼 위 여백을 조금 추가합니다.
+    st.markdown("<div style='height:18px' aria-hidden='true'></div>",unsafe_allow_html=True)
     left,right=st.columns(2)
     with left:
         if st.button('나의 점포 보기',use_container_width=True):
