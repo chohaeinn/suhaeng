@@ -170,8 +170,8 @@ def move(n):
 st.session_state.setdefault('step',0)
 step=st.session_state['step']
 if step!=0:
-    st.title('🧭 창업 나침반')
-    st.caption('어떤 가게를 열고 싶으세요? 동네를 고르는 일부터 함께 준비해요.')
+    st.title('창업 나침반')
+    pass
 visible_step={1:1,2:2,4:3,5:4,6:4}.get(step,2)
 if step!=0: st.progress(visible_step/4,text=f'{visible_step} / 4 · '+['가게 정하기','동네 고르기','후보 살펴보기','개업 준비'][visible_step-1])
 # 단계에 따라 철제 셔터가 올라가는 배경. 입력 요소와 지도는 항상 전면에 유지.
@@ -220,7 +220,7 @@ st.markdown("""<style>
 </style>""",unsafe_allow_html=True)
 @st.dialog('사장님, 반가워요')
 def login_dialog():
-    st.caption('처음 쓰는 이름은 네 자리 비밀번호로 등록돼요. 같은 접속 세션에서만 확인하는 체험 기능이에요.')
+    pass
     with st.form('demo_login'):
         owner=st.text_input('이름',max_chars=24,placeholder='예: 민수')
         pin=st.text_input('숫자 네 자리 비밀번호',type='password',max_chars=4,placeholder='숫자 4자리')
@@ -240,7 +240,7 @@ def login_dialog():
                 st.session_state['demo_owner']=owner.strip()
                 st.rerun()
             else: st.warning('이름과 숫자 네 자리 비밀번호를 입력해 주세요.')
-    st.caption('계정과 비밀번호 설정은 현재 세션에서만 유지돼요. 실제 회원 인증이나 점포별 접근 보호는 제공하지 않아요.')
+    pass
 
 # 아이콘 폰트가 레트로 글꼴로 덮이지 않도록 복원합니다.
 st.markdown("""<style>
@@ -295,6 +295,9 @@ textarea{min-height:120px!important}
 .zone-label{font-size:23px;color:#69452d;padding:16px;background:#f1dfbf;border-radius:12px;border-left:5px solid #a8653e;margin-bottom:16px}
 </style>""",unsafe_allow_html=True)
 
+def apply_shop_theme():
+    st.markdown('<style>\n@import url(\'https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gowun+Dodum&display=swap\');\n:root{--shop-teal:#397c79;--shop-deep:#245a59;--shop-blue:#345d87;--shop-wall:#eddb9f;--shop-paper:#fff9e7;--shop-red:#ad4d3f}\n.stApp.stApp{background:repeating-linear-gradient(0deg,#e6d49b 0px,#e6d49b 42px,#d9c68e 43px,#eedda8 45px)!important;color:#344b46!important}\n.stApp [data-testid="stAppViewContainer"]::before{background:repeating-linear-gradient(180deg,#7baba5 0px,#b0c7b3 4px,#91b4a7 21px,#67968c 24px,#4f7d76 26px,#a0bdb0 29px,#7baba5 32px)!important;border-bottom-color:#326966!important}\n.stApp .block-container{background:#fff9eaf5!important;border:7px solid #397c79!important;border-top:13px solid #326d6b!important;border-radius:5px!important;box-shadow:0 5px 0 #245a59,0 15px 28px #304c4333,inset 0 0 0 2px #f1e0b2!important;padding:26px!important}\n.stApp h1{background:linear-gradient(180deg,#406b95,#2e5075)!important;border:4px solid #e9dba9!important;border-bottom:6px solid #233e5b!important;color:#fff7d9!important;text-shadow:2px 3px 0 #243f5b!important;border-radius:5px!important;box-shadow:0 4px 0 #7eaa9d,0 8px 12px #324f4333!important;letter-spacing:.05em!important}\n.stApp h2,.stApp h3{color:#2c6663!important;font-family:\'Do Hyeon\',\'Malgun Gothic\',sans-serif!important}\n.stApp p,.stApp label,.stApp input,.stApp textarea{font-family:\'Gowun Dodum\',\'Malgun Gothic\',sans-serif!important}\n.stApp p,.stApp label{line-height:1.7!important}\n.stApp [data-testid="stWidgetLabel"] p{font-family:\'Do Hyeon\',sans-serif!important;font-size:20px!important;letter-spacing:.02em!important;color:#285e5b!important}\n.stApp [data-testid="stTextInputRootElement"],.stApp [data-testid="stNumberInputContainer"],.stApp [data-baseweb="select"]>div{border:2px solid #66938a!important;border-radius:5px!important;background:#fffbea!important;min-height:57px!important;box-shadow:inset 0 2px 5px #456b6220,0 3px 0 #d4dfcc!important}\n.stApp input,.stApp textarea{color:#344b46!important;background:#fffbea!important;font-size:18px!important}\n.stApp textarea{border:2px solid #66938a!important;border-radius:5px!important;min-height:125px!important}\n.stApp [data-testid="stVerticalBlockBorderWrapper"],.stApp [data-testid="stExpander"]{background:#fff9e8!important;border:2px solid #759f92!important;border-top:5px solid #397c79!important;border-radius:6px!important;box-shadow:0 4px 0 #d2dbc3!important}\n.stApp .stButton>button,.stApp .stDownloadButton>button{background:linear-gradient(#fff9df,#e9dba9)!important;color:#2b625d!important;border:2px solid #397c79!important;border-radius:5px!important;box-shadow:0 4px 0 #245a59,inset 0 1px #fff!important;min-height:55px!important;padding:12px 18px!important;transition:transform .15s,filter .15s}\n.stApp .stButton>button p,.stApp .stDownloadButton>button p{font-family:\'Do Hyeon\',sans-serif!important;font-size:21px!important;letter-spacing:.03em!important}\n.stApp .stButton>button[kind="primary"]{background:linear-gradient(#477e9e,#345d87)!important;color:#fff5d4!important;border-color:#274b65!important;box-shadow:0 4px 0 #203e57,inset 0 1px #8db0bc!important}\n.stApp .stButton>button:hover{transform:translateY(-2px);filter:brightness(1.05)}\n.stApp [data-testid="stSidebar"]{background:repeating-linear-gradient(0deg,#d9e4cb 0 40px,#c8dac3 41px 42px)!important;border-right:6px solid #397c79!important}\n.stApp [data-testid="stChatMessage"]{background:#f5efd8!important;border:1px solid #85a89a!important;border-left:5px solid #397c79!important;border-radius:6px!important}\n.stApp [data-testid="stMetric"]{background:#f8efd0!important;border:2px solid #66938a!important;padding:16px!important}\n.stApp .retro-status{background:#397c79!important;border:2px solid #245a59!important;border-radius:4px!important;color:#fff1c7!important;box-shadow:0 3px 0 #b1c2a8!important}\n.stApp .zone-label{background:#e5edcf!important;color:#285d59!important;border-left:6px solid #ad4d3f!important;border-radius:4px!important;font-family:\'Do Hyeon\',sans-serif!important}\n.stApp .st-key-floating_nachim button{background:radial-gradient(circle at 35% 30%,#efdfad,#c5b67d)!important;border:4px solid #397c79!important;box-shadow:0 4px 0 #245a59!important;border-radius:50%!important}\n.stApp .st-key-floating_nachim button p{font-family:\'Do Hyeon\',sans-serif!important;font-size:23px!important}\n.stApp [data-testid="stIconMaterial"],.stApp [data-testid="stIconMaterial"] span{font-family:\'Material Symbols Rounded\'!important}\n.stApp [role="dialog"]{background:#fff9e7!important;border:3px solid #397c79!important;border-radius:7px!important}\n.stApp .home-shutter{background:transparent!important;height:39svh!important;min-height:180px!important;padding:12px 18px!important}\n.stApp:has(.home-shutter) .block-container{background:#eddb9f!important;margin-top:1rem!important;margin-bottom:1rem!important;border:10px solid #397c79!important;border-top:15px solid #397c79!important;padding:14px 26px 25px!important;max-width:1350px!important;width:calc(100% - 40px)!important}\n.stApp:has(.home-shutter) .block-container:before{content:\'\';position:absolute;inset:73px 20px 18px;z-index:0;pointer-events:none;background:repeating-linear-gradient(180deg,#89ada0 0px,#b6c7ae 4px,#9abbab 21px,#729c8e 24px,#5b8a80 26px,#abc2ac 29px,#89ada0 32px);border:6px solid #397c79;box-shadow:inset 0 0 22px #244b4144}\n.stApp:has(.home-shutter) .block-container>div{position:relative;z-index:1}\n.stApp .home-shutter .name{background:linear-gradient(#426d98,#31547e)!important;color:#fff5cf!important;border:5px solid #eee0aa!important;border-radius:4px!important;padding:12px 22px!important;font-size:clamp(36px,min(8vw,10svh),105px)!important;letter-spacing:.045em!important;text-shadow:2px 3px #233e5b!important;box-shadow:0 5px 0 #264e61,0 10px 15px #234c4144!important;line-height:1.2!important;white-space:normal!important}\n.stApp .home-shutter .small{color:#244f4a!important;text-shadow:0 1px #f7efcf!important;font-family:\'Do Hyeon\',sans-serif!important;font-size:clamp(19px,3svh,28px)!important}\n.stApp .home-shutter p{color:#284e47!important;font-family:\'Do Hyeon\',sans-serif!important;font-size:clamp(17px,2.7svh,24px)!important}\n.stApp .vintage-compass{border-color:#ba995a!important;box-shadow:0 4px 8px #264e4144!important;width:clamp(65px,12vw,130px)!important}\n.stApp:has(.home-shutter) .stButton>button{min-height:65px!important;border:3px solid #245a59!important;background:linear-gradient(#fff4cd,#e8d59b)!important;box-shadow:0 5px 0 #245a59!important}\n.stApp:has(.home-shutter) .stButton>button p{font-size:clamp(23px,3vw,33px)!important}\n.stApp [data-testid="stPopoverBody"] .stButton>button p,.stApp [role="dialog"] .stButton>button p{font-size:18px!important}\n@media(max-width:650px){.stApp .block-container{padding:16px!important;border-width:4px!important;width:calc(100% - 20px)!important}.stApp:has(.home-shutter) .block-container{padding:10px 14px 18px!important;border-width:6px!important}.stApp .home-shutter{height:34svh!important}.stApp .home-shutter .name{padding:10px!important;font-size:clamp(30px,7.5vw,48px)!important}.stApp .brand-lockup{gap:9px!important}.stApp .vintage-compass{width:65px!important}}\n@media(prefers-reduced-motion:reduce){.stApp .stButton>button{transition:none}.stApp .stButton>button:hover{transform:none}}\n</style>',unsafe_allow_html=True)
+
 with st.sidebar:
     st.header('연결 설정')
     kakao=(st.text_input('카카오 REST API 키',type='password') or secret('KAKAO_REST_API_KEY')).strip()
@@ -302,12 +305,12 @@ with st.sidebar:
     base=st.text_input('BAZE Base URL',value=str(secret('BAZE_BASE_URL')),placeholder='API Gateway 화면의 Base URL',key='baze_base')
     model=st.text_input('BAZE 모델 ID',value=str(secret('BAZE_MODEL')),placeholder='모델 탭의 정확한 모델 ID',key='baze_model')
     if ai:
-        if base.strip() and model.strip(): st.caption('BAZE 설정을 불러왔어요. 기능 사용 시 연결을 확인해요.')
+        if base.strip() and model.strip(): pass
         else: st.warning('BAZE Base URL과 모델 ID도 입력해 주세요.')
-    st.caption('BAZE 요청 시 크레딧이 사용될 수 있어요.')
+    pass
     if kakao: st.success('카카오 키를 불러왔어요. 검색할 때 연결을 확인해요.')
     else: st.info('카카오 키를 넣어 주세요.')
-    st.caption('지도는 OpenStreetMap, 장소 검색은 카카오를 사용해요.')
+    pass
     if st.button('처음부터 다시'):
         for k in ['result','centers','confirmed','words','terms','chosen_center']:
             st.session_state.pop(k,None)
@@ -424,6 +427,7 @@ if step==0:
     [role="dialog"] [data-testid="stFormSubmitButton"] button{font-size:17px!important;min-height:42px!important}
     [role="dialog"] [data-testid="stFormSubmitButton"] button p{font-size:17px!important}
     </style>""",unsafe_allow_html=True)
+    apply_shop_theme()
     # 메인 진입 버튼 위 여백을 조금 추가합니다.
     st.markdown("<div style='height:18px' aria-hidden='true'></div>",unsafe_allow_html=True)
     left,right=st.columns(2)
@@ -439,9 +443,11 @@ if step==0:
 
 @st.dialog('나침이 · 우리 가게 길잡이')
 def nachim_dialog():
-    st.caption('선택한 업종과 검색 결과를 참고해요. 실제 수요와 임대료는 별도 확인이 필요해요.')
+    pass
     for message in st.session_state.get('nachim_history',[]):
         with st.chat_message(message['role']): st.write(message['content'])
+    if st.session_state.pop('_nachim_clear_input',False):
+        st.session_state['nachim_question']=''
     q=st.text_input('무엇을 도와드릴까요?',key='nachim_question')
     if st.button('나침이에게 묻기',key='nachim_send'):
         if not ai: st.info('연결 설정에서 BAZE 키를 설정해 주세요.')
@@ -451,15 +457,18 @@ def nachim_dialog():
                 with st.spinner('나침이가 살펴보고 있어요…'):
                     answer=startup_chat(ai,{'업종':st.session_state.get('description'),'검색결과':st.session_state.get('selected_evidence'),'검색어':st.session_state.get('terms')},history)
                 st.session_state['nachim_history']=history+[{'role':'assistant','content':answer}]
-                st.rerun()
+                st.session_state['_nachim_clear_input']=True
+                st.rerun(scope='fragment')
             except Exception: st.error('답변을 가져오지 못했어요. 연결 설정과 한도를 확인해 주세요.')
 
 if step not in (0,5):
     with st.container(key='floating_nachim'):
-        if st.button('✦',key='nachim_open',help='나침이에게 물어보기'): nachim_dialog()
+        if st.button('나침',key='nachim_open',help='나침이에게 물어보기'): nachim_dialog()
     st.markdown("""<style>.st-key-floating_nachim{position:fixed!important;right:24px;bottom:26px;width:68px!important;z-index:999}
     .st-key-floating_nachim button{width:64px!important;height:64px!important;min-height:64px!important;border-radius:50%!important;background:#e8d7aa!important;border:3px solid #355747!important;box-shadow:2px 4px 0 #243e35!important;color:#2c594a!important}
     .st-key-floating_nachim button p{font-size:30px!important}</style>""",unsafe_allow_html=True)
+
+apply_shop_theme()
 
 if step==1:
     st.header('어떤 가게를 열고 싶으세요?')
@@ -479,18 +488,18 @@ if step==1:
                 st.session_state['suggest_source']=description
                 st.info('자동 추천 연결이 어려워 기본 검색어를 준비했어요.')
     if st.session_state.get('suggest_source')==description:
-        st.caption('여러 개를 골라도 돼요. 다시 누르면 선택이 풀려요.')
+        pass
         cols=st.columns(3)
         for col,word in zip(cols,st.session_state.get('suggestions',[])):
             col.button(('✓ ' if word in [w.strip() for w in st.session_state.get('words','').split(',')] else '+ ')+word,on_click=choose_word,args=(word,),use_container_width=True)
-        if not ai: st.caption('현재는 기본 추천이에요. AI 키를 연결하면 업종 설명에 맞춰 추천해요.')
+        if not ai: pass
     brand_options=list(dict.fromkeys(brands_for([description])+st.session_state.get('brand_options',[])))
     with st.expander('체인점도 함께 찾기'):
-        st.caption('브랜드 참고 목록에서 고른 이름을 실제 장소 검색어에 추가해요. 학습이나 실시간 브랜드 조사 결과는 아니에요. 관련성이 다른 브랜드는 선택하지 마세요.')
+        pass
         selected_brands=st.multiselect('함께 검색할 브랜드',brand_options,key='selected_brands')
         extra_brands=st.text_input('목록에 없는 브랜드',placeholder='쉼표로 구분해서 입력',key='extra_brands')
     words=st.text_input('찾을 검색어',key='words',placeholder='예: 샐러드')
-    st.caption('기본 업종도 직접 추가할 수 있어요. 예: 돈가스, 경양식, 카츠, 튀김. 넓은 검색어를 고르면 다른 종류의 음식점도 포함될 수 있어요.')
+    pass
     if st.button('다음 · 지도에서 고르기',type='primary',use_container_width=True):
         terms=list(dict.fromkeys(t.strip() for t in words.replace('，',',').split(',') if t.strip()))
         if not 1<=len(terms)<=6: st.warning('검색어를 1~6개 골라 주세요.')
@@ -503,7 +512,7 @@ if step==1:
 
 if step==2:
     st.header('살펴볼 곳을 지도에서 눌러 주세요')
-    st.caption('지도를 확대하고 원하는 동네를 한 번 누르세요. 검색할 중심 위치가 표시돼요.')
+    pass
     place_query=st.text_input('동네나 장소 검색',placeholder='예: 성수역, 수원시청')
     if st.button('이 장소로 이동'):
         if not kakao or not place_query.strip(): st.warning('장소 이름과 카카오 연결 설정을 확인해 주세요.')
@@ -562,7 +571,7 @@ if step==2:
                 move(4)
             except Exception as e:
                 st.error('가게를 불러오지 못했어요. 연결 설정과 사용 한도를 확인해 주세요.')
-                st.caption(str(e))
+                pass
     if st.button('이전'): move(1)
     st.stop()
 
@@ -591,7 +600,7 @@ def accept_zone_click(point, rows, previous):
 
 if step==4:
     st.header('마음에 드는 동네를 둘러보세요')
-    st.caption('지도 핀을 누르면 왼쪽의 구역과 점포 목록이 함께 바뀌어요. 검색 결과는 전체 점포 수를 뜻하지 않아요.')
+    pass
     scope=zone_scope(record)
     if st.session_state.get('_zone_scope')!=scope:
         st.session_state['_zone_scope']=scope
@@ -605,8 +614,8 @@ if step==4:
         m=folium.Map(location=[float(center['lat']),float(center['lon'])],zoom_start=14,tiles='OpenStreetMap')
         for r in rows:
             active=r['name']==st.session_state['active_zone']
-            color='#9b5536' if active else '#ad895b'
-            pin=f"<div style='position:relative;width:36px;height:46px;filter:drop-shadow(0 3px 2px #503b2c55)'><div style='position:absolute;left:3px;top:2px;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:{color};border:3px solid #513a29;box-sizing:border-box'></div><div style='position:absolute;left:13px;top:12px;width:10px;height:10px;border-radius:50%;background:#fff1d4;border:2px solid #513a29;box-sizing:border-box'></div></div>"
+            color='#ad4d3f' if active else '#397c79'
+            pin=f"<div style='position:relative;width:36px;height:46px;filter:drop-shadow(0 3px 2px #503b2c55)'><div style='position:absolute;left:3px;top:2px;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:{color};border:3px solid #245a59;box-sizing:border-box'></div><div style='position:absolute;left:13px;top:12px;width:10px;height:10px;border-radius:50%;background:#fff1d4;border:2px solid #245a59;box-sizing:border-box'></div></div>"
             folium.Marker([r['lat'],r['lon']],tooltip=r['name'],icon=folium.DivIcon(html=pin,icon_size=(36,46),icon_anchor=(18,36))).add_to(m)
         event=st_folium(m,height=550,use_container_width=True,key='zone_icon_map_'+st.session_state['active_zone'],returned_objects=['last_object_clicked'])
         point=event.get('last_object_clicked') if event else None
@@ -616,7 +625,7 @@ if step==4:
             st.session_state['active_zone']=zone['name']
             st.session_state['selected_evidence']=zone
             st.rerun()
-        st.caption('갈색 핀은 지금 고른 구역이에요. 구역 정보는 왼쪽에서만 확인할 수 있어요.')
+        pass
     with left:
         selected=st.selectbox('살펴볼 구역',names,key='active_zone',on_change=lambda: st.session_state.pop('_last_zone_click',None))
         zone=next(r for r in rows if r['name']==selected)
@@ -626,7 +635,7 @@ if step==4:
             with st.container(height=240):
                 for shop in zone['shops']:
                     st.markdown('**'+shop['place_name']+'**')
-                    st.caption(shop.get('road_address_name') or shop.get('address_name',''))
+                    pass
                     st.caption(shop.get('category_name',''))
                 if not zone['shops']: st.info('검색에서 확인된 점포가 없어요. 실제로 없는지는 현장에서 확인해 주세요.')
         if st.button('이 구역 주거 살펴보기',use_container_width=True):
@@ -641,14 +650,14 @@ if step==4:
         housing=st.session_state.get('zone_housing_v2')
         if housing and housing[:2]==(scope,zone['name']):
             for label,n,limit in housing[2]: st.write(f'{label} 검색 결과 · {n}곳'+(' 이상' if limit else ''))
-            st.caption('시설 검색 결과이며 인구·세대 수가 아니에요. 관련 업체가 포함될 수 있어요.')
+            pass
         if zone['limited']: st.warning('검색 한도에 도달해 일부 점포만 확인된 구역이에요.')
         if st.button('이곳으로 준비 계획 만들기',type='primary',use_container_width=True):
             st.session_state['chosen_area']=record['center']+' 기준 '+zone['name']
             st.session_state['selected_evidence']=zone
             move(5)
         if st.button('이전 · 동네 바꾸기',use_container_width=True): move(2)
-        st.caption('임대료·유동인구·실제 수요는 현장에서 따로 확인해 주세요.')
+        pass
     st.stop()
 
 
@@ -701,8 +710,8 @@ if step==5:
     task_column,idea_column=st.columns([1.1,1],gap='large')
     with task_column:
         st.subheader('개업까지 한 걸음씩')
-        st.caption('각 할 일 아래 메모 열기를 누르면 작성할 수 있어요.')
-        st.caption('견적, 연락처, 확인할 내용을 항목별로 적어 두세요. 비밀번호나 민감한 개인정보는 적지 마세요.')
+        pass
+        pass
         for date,task in plan(opening):
             prefix='지금 확인해 주세요' if date<dt.date.today() else date.strftime('%m월 %d일')
             with st.container(border=True):
@@ -714,7 +723,7 @@ if step==5:
             lines.append(f"{'완료' if done else '미완료'} | {date} | {task}\n메모: {note or '(없음)'}")
     with idea_column:
         st.subheader('우리 가게, 함께 구상해요')
-        st.caption('콘셉트와 메뉴는 시험해 볼 아이디어예요. 실제 고객 유입이나 매출을 보장하지 않아요. 선택 구역의 검색 점포와 조회한 주변 시설을 참고해요. 실제 수요는 현장에서 확인해야 해요.')
+        pass
         description=st.session_state.get('description','')
         terms=st.session_state.get('terms',[])
         signature=json.dumps(['detailed-v2',area,description,terms],ensure_ascii=False)
@@ -739,7 +748,7 @@ if step==5:
                 lines.extend(item['title']+'\n'+item['detail'] for item in saved['data'][field])
         st.divider()
         st.markdown('#### 추천을 보고 바로 이야기해 보세요')
-        st.caption('업종, 선택 지역, 준비 메모와 추천 내용을 참고해 함께 구체화해요. 실시간 검색이나 실제 상권 수요 확인 기능은 없어요.')
+        pass
         chat_scope=json.dumps([area,description,terms],ensure_ascii=False)
         if st.session_state.get('chat_scope')!=chat_scope:
             st.session_state['chat_scope']=chat_scope
@@ -768,13 +777,13 @@ if step==5:
                 st.rerun()
             except Exception as e:
                 st.error(str(e))
-                st.caption('전송에 실패한 질문은 대화 기록에 추가되지 않았어요. 다시 입력하거나 버튼을 눌러 주세요.')
+                pass
         if history:
             transcript='\n\n'.join(('나: ' if m['role']=='user' else '도우미: ')+m['content'] for m in history)
             st.download_button('상담 내용 내려받기',transcript,'startup_chat.txt','text/plain')
-        st.caption('질문과 관련 준비 메모가 외부 AI 서비스로 전송돼요. 개인정보·비밀정보는 넣지 마세요. 상담 기록은 현재 세션에서만 유지되며, AI 사용량에 따라 별도 비용이 발생할 수 있어요.')
+        pass
     st.download_button('메모와 준비 목록 내려받기','\n\n'.join([area]+lines),'opening_plan.txt','text/plain')
-    st.caption('메모와 체크 상태는 현재 세션에서만 유지돼요. 나가기 전에 내려받아 주세요. 파일을 앱에 다시 불러오는 기능은 아직 없어요. 신고·인허가는 해당 기관의 공식 안내를 확인해 주세요.')
+    pass
     st.divider()
     if st.button('개업 완료 · 우리 가게 문 열기',type='primary',use_container_width=True):
         st.session_state['celebrate_once']=True
@@ -817,7 +826,17 @@ def storefront_html(name,description):
     .customer{position:absolute;left:var(--x);bottom:var(--y);width:27px;height:80px;z-index:7;filter:drop-shadow(3px 5px 2px #62452b33)}.customer i{position:absolute;top:0;left:6px;width:17px;height:20px;border-radius:50%;background:#46372c;border-bottom:5px solid #c1946c}.customer b{position:absolute;top:19px;left:1px;width:27px;height:35px;border-radius:12px 12px 5px 5px;background:var(--coat);box-shadow:inset -4px 0 #0002}.customer span{position:absolute;top:53px;left:5px;width:7px;height:25px;background:#4b443c;box-shadow:12px 0 #4b443c;border-radius:0 0 3px 3px}
     .street-caption{position:absolute;bottom:12px;left:18px;color:#563d29;font-size:14px;max-width:48%}
     @media(max-width:650px){.facade{left:4%;right:4%;border-width:7px}.shop-front{left:4%;right:4%;gap:5px;padding:5px}.shop-sign{left:4%;right:4%}.shop-sign small{font-size:8px;letter-spacing:1px}.customer{transform:scale(.8);transform-origin:bottom}.street-caption{font-size:11px}.planter{left:1%}}
-    </style><div class="store-world"><div class="facade"><div class="shop-sign"><small>EYEBROW</small><strong>SHOPNAME</strong></div><div class="canopy"></div><div class="shop-front"><div class="display-window"><div class="pendant"></div><div class="shelves">OBJECTS</div><div class="counter"></div></div><div class="shop-door"><div class="door-open">문 열었어요</div></div></div></div><div class="planter"></div><div class="welcome-mat"></div>GUESTS<div class="street-caption">SUBTITLE<br>새로운 시작을 축하해요.</div></div>""".replace('ACCENT',accent).replace('EYEBROW',eyebrow).replace('SHOPNAME',name).replace('OBJECTS',objects).replace('GUESTS',guests).replace('SUBTITLE',subtitle)
+    </style><style>
+.stApp .store-world{background:linear-gradient(#ecdda9 0%,#d9dbbb 78%,#b2baa0 78%,#c8c7aa 100%);border:5px solid #397c79;border-radius:5px;box-shadow:inset 0 0 60px #6b8e7230,0 7px 0 #245a59}
+.stApp .facade{background:repeating-linear-gradient(0deg,#eddb9f 0 28px,#d8c78d 29px 30px);border-color:#397c79;border-width:12px;box-shadow:0 14px 22px #264c4144,inset 0 0 9px #42756a44}
+.stApp .shop-sign{background:linear-gradient(#416c97,#31547c);border-color:#f0e2b2;box-shadow:0 4px 0 #264b65,0 9px 12px #264b4b44;color:#fff4d1}
+.stApp .shop-sign small{color:#e5d7a5}.stApp .shop-sign strong{font-family:'Do Hyeon',sans-serif!important;text-shadow:2px 2px #203f5e}
+.stApp .shop-front{background:#2c6864}.stApp .display-window,.stApp .shop-door{border-color:#397c79}.stApp .shop-door{background:linear-gradient(115deg,#ffe4a7,#9fb5a0)}
+.stApp .door-open{background:#fff3ce;color:#ad4d3f;border:1px solid #ba9d64;font-family:'Do Hyeon',sans-serif}
+.stApp .canopy{background:repeating-linear-gradient(90deg,#397c79 0 44px,#f5e8ba 44px 88px);border-bottom-color:#2b6562}
+.stApp .facade:after{content:'';position:absolute;right:-9%;bottom:3%;width:24px;height:47px;background:linear-gradient(#bb5a48,#9a4337);border:2px solid #7e382e;border-radius:4px;box-shadow:0 3px 3px #5e523333}
+.stApp .street-caption{font-family:'Do Hyeon',sans-serif!important;color:#345950}
+</style><div class="store-world"><div class="facade"><div class="shop-sign"><small>EYEBROW</small><strong>SHOPNAME</strong></div><div class="canopy"></div><div class="shop-front"><div class="display-window"><div class="pendant"></div><div class="shelves">OBJECTS</div><div class="counter"></div></div><div class="shop-door"><div class="door-open">문 열었어요</div></div></div></div><div class="planter"></div><div class="welcome-mat"></div>GUESTS<div class="street-caption">SUBTITLE<br>새로운 시작을 축하해요.</div></div>""".replace('ACCENT',accent).replace('EYEBROW',eyebrow).replace('SHOPNAME',name).replace('OBJECTS',objects).replace('GUESTS',guests).replace('SUBTITLE',subtitle)
 
 if step==6:
     st.subheader('드디어, 우리 가게가 문을 열었어요!')
@@ -825,7 +844,7 @@ if step==6:
     st.session_state['store_name']=store
     description=st.session_state.get('description','')
     st.markdown(storefront_html(store,description),unsafe_allow_html=True)
-    st.caption('입력한 업종에 맞춘 개업 축하용 화면이에요. 실제 인테리어 설계나 방문객 예측은 아니에요.')
+    pass
     a,b=st.columns(2)
     if a.button('개업 준비 다시 보기',use_container_width=True): move(5)
     if b.button('처음 화면으로',use_container_width=True): move(0)
