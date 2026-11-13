@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 import folium
 import streamlit as st
+import streamlit.components.v1 as components
 from streamlit_folium import st_folium
 
 
@@ -163,7 +164,38 @@ st.markdown("""<style>
 input,textarea{background:#fffdf4!important;color:#294b3d!important}
 </style>""",unsafe_allow_html=True)
 
+SHOP_FIELDS={'description','words','terms','brand_terms','selected_brands','extra_brands','brand_options','suggestions','suggest_source','result','confirmed','chosen_area','selected_evidence','regional_context','housing_result','zone_housing_v2','business_ideas','chat_scope','startup_messages','nachim_history','store_name','opening_store_name','opening_shop_name','opening_date','map_point','map_zoom','location_options','active_zone','_zone_scope'}
+
+def shop_field(key):
+    return key in SHOP_FIELDS or key.startswith('note-') or ('-' in key and key.rsplit('-',1)[-1] in [task for _,task in plan(dt.date.today())])
+
+def save_current_shop():
+    import copy,uuid
+    if not st.session_state.get('result'): return
+    sid=st.session_state.get('_current_shop_id')
+    if not sid:
+        sid=uuid.uuid4().hex
+        st.session_state['_current_shop_id']=sid
+    data={k:copy.deepcopy(v) for k,v in st.session_state.items() if shop_field(k)}
+    shops=st.session_state.setdefault('_saved_shops',{})
+    shops[sid]={'data':data,'name':data.get('store_name') or data.get('opening_store_name') or data.get('description') or '준비 중인 점포','area':data.get('chosen_area','지역 선택 중')}
+
+def clear_shop_work():
+    for key in list(st.session_state):
+        if shop_field(key) or key in ['_current_shop_id','_last_zone_click']:
+            del st.session_state[key]
+
+def open_saved_shop(sid):
+    import copy
+    data=copy.deepcopy(st.session_state['_saved_shops'][sid]['data'])
+    clear_shop_work()
+    st.session_state.update(data)
+    st.session_state['_current_shop_id']=sid
+    st.session_state['step']=5
+    st.rerun()
+
 def move(n):
+    save_current_shop()
     st.session_state['step']=n
     st.rerun()
 
@@ -297,6 +329,8 @@ textarea{min-height:120px!important}
 
 def apply_shop_theme():
     st.markdown('<style>\n@import url(\'https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gowun+Dodum&display=swap\');\n:root{--shop-teal:#397c79;--shop-deep:#245a59;--shop-blue:#345d87;--shop-wall:#eddb9f;--shop-paper:#fff9e7;--shop-red:#ad4d3f}\n.stApp.stApp{background:repeating-linear-gradient(0deg,#e6d49b 0px,#e6d49b 42px,#d9c68e 43px,#eedda8 45px)!important;color:#344b46!important}\n.stApp [data-testid="stAppViewContainer"]::before{background:repeating-linear-gradient(180deg,#7baba5 0px,#b0c7b3 4px,#91b4a7 21px,#67968c 24px,#4f7d76 26px,#a0bdb0 29px,#7baba5 32px)!important;border-bottom-color:#326966!important}\n.stApp .block-container{background:#fff9eaf5!important;border:7px solid #397c79!important;border-top:13px solid #326d6b!important;border-radius:5px!important;box-shadow:0 5px 0 #245a59,0 15px 28px #304c4333,inset 0 0 0 2px #f1e0b2!important;padding:26px!important}\n.stApp h1{background:linear-gradient(180deg,#406b95,#2e5075)!important;border:4px solid #e9dba9!important;border-bottom:6px solid #233e5b!important;color:#fff7d9!important;text-shadow:2px 3px 0 #243f5b!important;border-radius:5px!important;box-shadow:0 4px 0 #7eaa9d,0 8px 12px #324f4333!important;letter-spacing:.05em!important}\n.stApp h2,.stApp h3{color:#2c6663!important;font-family:\'Do Hyeon\',\'Malgun Gothic\',sans-serif!important}\n.stApp p,.stApp label,.stApp input,.stApp textarea{font-family:\'Gowun Dodum\',\'Malgun Gothic\',sans-serif!important}\n.stApp p,.stApp label{line-height:1.7!important}\n.stApp [data-testid="stWidgetLabel"] p{font-family:\'Do Hyeon\',sans-serif!important;font-size:20px!important;letter-spacing:.02em!important;color:#285e5b!important}\n.stApp [data-testid="stTextInputRootElement"],.stApp [data-testid="stNumberInputContainer"],.stApp [data-baseweb="select"]>div{border:2px solid #66938a!important;border-radius:5px!important;background:#fffbea!important;min-height:57px!important;box-shadow:inset 0 2px 5px #456b6220,0 3px 0 #d4dfcc!important}\n.stApp input,.stApp textarea{color:#344b46!important;background:#fffbea!important;font-size:18px!important}\n.stApp textarea{border:2px solid #66938a!important;border-radius:5px!important;min-height:125px!important}\n.stApp [data-testid="stVerticalBlockBorderWrapper"],.stApp [data-testid="stExpander"]{background:#fff9e8!important;border:2px solid #759f92!important;border-top:5px solid #397c79!important;border-radius:6px!important;box-shadow:0 4px 0 #d2dbc3!important}\n.stApp .stButton>button,.stApp .stDownloadButton>button{background:linear-gradient(#fff9df,#e9dba9)!important;color:#2b625d!important;border:2px solid #397c79!important;border-radius:5px!important;box-shadow:0 4px 0 #245a59,inset 0 1px #fff!important;min-height:55px!important;padding:12px 18px!important;transition:transform .15s,filter .15s}\n.stApp .stButton>button p,.stApp .stDownloadButton>button p{font-family:\'Do Hyeon\',sans-serif!important;font-size:21px!important;letter-spacing:.03em!important}\n.stApp .stButton>button[kind="primary"]{background:linear-gradient(#477e9e,#345d87)!important;color:#fff5d4!important;border-color:#274b65!important;box-shadow:0 4px 0 #203e57,inset 0 1px #8db0bc!important}\n.stApp .stButton>button:hover{transform:translateY(-2px);filter:brightness(1.05)}\n.stApp [data-testid="stSidebar"]{background:repeating-linear-gradient(0deg,#d9e4cb 0 40px,#c8dac3 41px 42px)!important;border-right:6px solid #397c79!important}\n.stApp [data-testid="stChatMessage"]{background:#f5efd8!important;border:1px solid #85a89a!important;border-left:5px solid #397c79!important;border-radius:6px!important}\n.stApp [data-testid="stMetric"]{background:#f8efd0!important;border:2px solid #66938a!important;padding:16px!important}\n.stApp .retro-status{background:#397c79!important;border:2px solid #245a59!important;border-radius:4px!important;color:#fff1c7!important;box-shadow:0 3px 0 #b1c2a8!important}\n.stApp .zone-label{background:#e5edcf!important;color:#285d59!important;border-left:6px solid #ad4d3f!important;border-radius:4px!important;font-family:\'Do Hyeon\',sans-serif!important}\n.stApp .st-key-floating_nachim button{background:radial-gradient(circle at 35% 30%,#efdfad,#c5b67d)!important;border:4px solid #397c79!important;box-shadow:0 4px 0 #245a59!important;border-radius:50%!important}\n.stApp .st-key-floating_nachim button p{font-family:\'Do Hyeon\',sans-serif!important;font-size:23px!important}\n.stApp [data-testid="stIconMaterial"],.stApp [data-testid="stIconMaterial"] span{font-family:\'Material Symbols Rounded\'!important}\n.stApp [role="dialog"]{background:#fff9e7!important;border:3px solid #397c79!important;border-radius:7px!important}\n.stApp .home-shutter{background:transparent!important;height:39svh!important;min-height:180px!important;padding:12px 18px!important}\n.stApp:has(.home-shutter) .block-container{background:#eddb9f!important;margin-top:1rem!important;margin-bottom:1rem!important;border:10px solid #397c79!important;border-top:15px solid #397c79!important;padding:14px 26px 25px!important;max-width:1350px!important;width:calc(100% - 40px)!important}\n.stApp:has(.home-shutter) .block-container:before{content:\'\';position:absolute;inset:73px 20px 18px;z-index:0;pointer-events:none;background:repeating-linear-gradient(180deg,#89ada0 0px,#b6c7ae 4px,#9abbab 21px,#729c8e 24px,#5b8a80 26px,#abc2ac 29px,#89ada0 32px);border:6px solid #397c79;box-shadow:inset 0 0 22px #244b4144}\n.stApp:has(.home-shutter) .block-container>div{position:relative;z-index:1}\n.stApp .home-shutter .name{background:linear-gradient(#426d98,#31547e)!important;color:#fff5cf!important;border:5px solid #eee0aa!important;border-radius:4px!important;padding:12px 22px!important;font-size:clamp(36px,min(8vw,10svh),105px)!important;letter-spacing:.045em!important;text-shadow:2px 3px #233e5b!important;box-shadow:0 5px 0 #264e61,0 10px 15px #234c4144!important;line-height:1.2!important;white-space:normal!important}\n.stApp .home-shutter .small{color:#244f4a!important;text-shadow:0 1px #f7efcf!important;font-family:\'Do Hyeon\',sans-serif!important;font-size:clamp(19px,3svh,28px)!important}\n.stApp .home-shutter p{color:#284e47!important;font-family:\'Do Hyeon\',sans-serif!important;font-size:clamp(17px,2.7svh,24px)!important}\n.stApp .vintage-compass{border-color:#ba995a!important;box-shadow:0 4px 8px #264e4144!important;width:clamp(65px,12vw,130px)!important}\n.stApp:has(.home-shutter) .stButton>button{min-height:65px!important;border:3px solid #245a59!important;background:linear-gradient(#fff4cd,#e8d59b)!important;box-shadow:0 5px 0 #245a59!important}\n.stApp:has(.home-shutter) .stButton>button p{font-size:clamp(23px,3vw,33px)!important}\n.stApp [data-testid="stPopoverBody"] .stButton>button p,.stApp [role="dialog"] .stButton>button p{font-size:18px!important}\n@media(max-width:650px){.stApp .block-container{padding:16px!important;border-width:4px!important;width:calc(100% - 20px)!important}.stApp:has(.home-shutter) .block-container{padding:10px 14px 18px!important;border-width:6px!important}.stApp .home-shutter{height:34svh!important}.stApp .home-shutter .name{padding:10px!important;font-size:clamp(30px,7.5vw,48px)!important}.stApp .brand-lockup{gap:9px!important}.stApp .vintage-compass{width:65px!important}}\n@media(prefers-reduced-motion:reduce){.stApp .stButton>button{transition:none}.stApp .stButton>button:hover{transform:none}}\n</style>',unsafe_allow_html=True)
+
+    st.markdown('<style>\n/* Portals live outside the main app: style them directly as well. */\n[role="dialog"],[data-testid="stDialog"] [role="dialog"]{background:#fff9e7!important;border:4px solid #397c79!important;border-top:10px solid #345d87!important;border-radius:9px!important;box-shadow:0 12px 35px #254c4544!important;color:#344b46!important}\n[role="dialog"] h2,[role="dialog"] h3{font-family:\'Do Hyeon\',\'Malgun Gothic\',sans-serif!important;color:#2c6663!important;font-weight:400!important}\n[role="dialog"] p,[role="dialog"] input,[role="dialog"] textarea{font-family:\'Gowun Dodum\',\'Malgun Gothic\',sans-serif!important;color:#344b46!important}\n[role="dialog"] [data-testid="stWidgetLabel"] p{font-family:\'Do Hyeon\',sans-serif!important;font-size:20px!important}\n[role="dialog"] [data-testid="stTextInputRootElement"],[role="dialog"] [data-baseweb="select"]>div{background:#fffbea!important;border:2px solid #66938a!important;border-radius:6px!important;min-height:54px!important}\n[role="dialog"] input,[role="dialog"] textarea{background:#fffbea!important;font-size:18px!important}\n[role="dialog"] button[kind="secondary"],[role="dialog"] button[kind="primary"],[role="dialog"] [data-testid="stFormSubmitButton"] button{background:linear-gradient(#fff4cd,#e8d59b)!important;border:2px solid #397c79!important;border-radius:5px!important;box-shadow:0 3px 0 #245a59!important;min-height:48px!important;color:#285e5b!important}\n[role="dialog"] button p{font-family:\'Do Hyeon\',sans-serif!important;font-size:19px!important}\n[role="dialog"] [data-testid="stChatMessage"]{background:#f0edd7!important;border:1px solid #8bac9b!important;border-left:4px solid #397c79!important;border-radius:6px!important}\n[data-testid="stPopoverBody"],[data-baseweb="popover"] [role="listbox"],[data-baseweb="menu"],[data-baseweb="calendar"]{background:#fff9e7!important;border:2px solid #66938a!important;border-radius:7px!important;color:#344b46!important}\n[data-testid="stPopoverBody"] button{background:#f3e5b9!important;border-color:#397c79!important;color:#285e5b!important}\n[data-baseweb="popover"] [role="option"]:hover{background:#dce8cf!important}\n.stApp [data-testid="stPopover"]>button{background:#fff4cd!important;border:2px solid #66938a!important;border-radius:5px!important;color:#285e5b!important}\n.stApp .st-key-floating_nachim{width:76px!important;right:22px!important;bottom:22px!important}\n.stApp .st-key-floating_nachim button{position:relative!important;width:72px!important;height:72px!important;min-height:72px!important;padding:0!important;overflow:hidden!important;border:5px solid #397c79!important;border-radius:50%!important;background:radial-gradient(circle,#fff1c9 0 52%,#b99858 53% 58%,#e2ca8b 59% 100%)!important;box-shadow:0 4px 0 #245a59,0 7px 12px #254c4533!important}\n.stApp .st-key-floating_nachim button p{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important}\n.stApp .st-key-floating_nachim button:before{content:\'N\';position:absolute;top:3px;left:0;right:0;text-align:center;font:bold 11px Georgia,serif;color:#345d87;z-index:2}\n.stApp .st-key-floating_nachim button:after{content:\'\';position:absolute;left:23px;top:16px;width:18px;height:34px;background:linear-gradient(#ad4d3f 0 50%,#345d87 50% 100%);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);transform:rotate(28deg);filter:drop-shadow(1px 2px 1px #345d8755);pointer-events:none}\n.stApp .st-key-floating_nachim button:focus-visible{outline:3px solid #ad4d3f!important;outline-offset:4px}\n</style>',unsafe_allow_html=True)
 
 with st.sidebar:
     st.header('연결 설정')
@@ -433,12 +467,29 @@ if step==0:
     left,right=st.columns(2)
     with left:
         if st.button('나의 점포 보기',use_container_width=True):
-            if st.session_state.get('result'): move(5)
-            else: st.info('아직 준비 중인 점포가 없어요. 새 점포 만들기를 눌러 주세요.')
+            move(7)
     with right:
         if st.button('새 점포 생성하기',use_container_width=True):
-            # 기존 준비 내용을 지우지 않고 첫 단계로 이동합니다.
-            move(1)
+            save_current_shop()
+            clear_shop_work()
+            st.session_state['step']=1
+            st.rerun()
+    st.stop()
+
+if step==7:
+    apply_shop_theme()
+    st.header('나의 점포 목록')
+    shops=st.session_state.get('_saved_shops',{})
+    if not shops:
+        st.info('아직 준비 중인 점포가 없어요. 새 점포부터 만들어 주세요.')
+    for sid,shop in shops.items():
+        with st.container(border=True):
+            st.subheader(shop['name'])
+            st.write(shop['area'])
+            if st.button('메모와 개업 준비 보기',key='open_shop_'+sid,use_container_width=True):
+                open_saved_shop(sid)
+    st.write('점포 목록과 메모는 현재 접속 세션에서만 유지돼요.')
+    if st.button('홈으로 돌아가기',use_container_width=True): move(0)
     st.stop()
 
 @st.dialog('나침이 · 우리 가게 길잡이')
@@ -463,7 +514,7 @@ def nachim_dialog():
 
 if step not in (0,5):
     with st.container(key='floating_nachim'):
-        if st.button('나침',key='nachim_open',help='나침이에게 물어보기'): nachim_dialog()
+        if st.button('나침이에게 물어보기',key='nachim_open',help='나침이에게 물어보기'): nachim_dialog()
     st.markdown("""<style>.st-key-floating_nachim{position:fixed!important;right:24px;bottom:26px;width:68px!important;z-index:999}
     .st-key-floating_nachim button{width:64px!important;height:64px!important;min-height:64px!important;border-radius:50%!important;background:#e8d7aa!important;border:3px solid #355747!important;box-shadow:2px 4px 0 #243e35!important;color:#2c594a!important}
     .st-key-floating_nachim button p{font-size:30px!important}</style>""",unsafe_allow_html=True)
@@ -705,7 +756,9 @@ if step==5:
     st.header('개업 준비, 하나씩 해봐요')
     area=st.session_state.get('chosen_area','선택한 후보')
     st.write('📍 '+area)
-    opening=st.date_input('언제 문을 열고 싶으세요?',value=dt.date.today()+dt.timedelta(days=60),min_value=dt.date.today())
+    if 'opening_date' not in st.session_state:
+        st.session_state['opening_date']=dt.date.today()+dt.timedelta(days=60)
+    opening=st.date_input('언제 문을 열고 싶으세요?',key='opening_date')
     lines=[]
     task_column,idea_column=st.columns([1.1,1],gap='large')
     with task_column:
@@ -838,13 +891,24 @@ def storefront_html(name,description):
 .stApp .street-caption{font-family:'Do Hyeon',sans-serif!important;color:#345950}
 </style><div class="store-world"><div class="facade"><div class="shop-sign"><small>EYEBROW</small><strong>SHOPNAME</strong></div><div class="canopy"></div><div class="shop-front"><div class="display-window"><div class="pendant"></div><div class="shelves">OBJECTS</div><div class="counter"></div></div><div class="shop-door"><div class="door-open">문 열었어요</div></div></div></div><div class="planter"></div><div class="welcome-mat"></div>GUESTS<div class="street-caption">SUBTITLE<br>새로운 시작을 축하해요.</div></div>""".replace('ACCENT',accent).replace('EYEBROW',eyebrow).replace('SHOPNAME',name).replace('OBJECTS',objects).replace('GUESTS',guests).replace('SUBTITLE',subtitle)
 
+if step==5:
+    save_current_shop()
+
 if step==6:
     st.subheader('드디어, 우리 가게가 문을 열었어요!')
     store=st.text_input('간판에 넣을 가게 이름',key='opening_store_name',value=st.session_state.get('store_name','우리 가게'))
     st.session_state['store_name']=store
     description=st.session_state.get('description','')
-    st.markdown(storefront_html(store,description),unsafe_allow_html=True)
+    scene=storefront_html(store,description)
+    # Render a complete document, isolated from Markdown sanitizing and app CSS.
+    scene=scene.replace('.stApp ', '')
+    scene=scene.replace('height:clamp(360px,55vh,560px)', 'height:460px')
+    document='<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>@import url("https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap");html,body{margin:0;padding:0;background:#fff9e7;font-family:"Do Hyeon","Malgun Gothic",sans-serif}*{box-sizing:border-box}</style></head><body>'+scene+'</body></html>'
+    components.html(document,height=485,scrolling=False)
     pass
     a,b=st.columns(2)
     if a.button('개업 준비 다시 보기',use_container_width=True): move(5)
     if b.button('처음 화면으로',use_container_width=True): move(0)
+
+if step==6:
+    save_current_shop()
