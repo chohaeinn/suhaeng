@@ -3,7 +3,7 @@ import json
 import math
 import datetime as dt
 import requests
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import pandas as pd
 import folium
 import streamlit as st
@@ -19,6 +19,7 @@ def secret(name):
     try: return st.secrets.get(name,'')
     except Exception: return ''
 
+@st.cache_data(ttl=600,show_spinner=False,max_entries=5000)
 def get_json(url,key,params):
     r=requests.get(url,headers={'Authorization':'KakaoAK '+key},params=params,timeout=25)
     if not r.ok:
@@ -61,6 +62,38 @@ def detailed_search(key,term,lat,lon,radius):
         # 세분 조회로도 전체 수집이 보장되지 않으므로 원래 제한 표시 유지
         limited=limited or any(flags)
     return list(found.values()),limited
+
+def collect_area_shops(key,areas,queries,radius,terms,on_progress=None):
+    # A single bounded executor handles all (zone, term) pairs; no nested pools.
+    queries=list(dict.fromkeys(queries))
+    rows=[{'name':name,'lat':lat,'lon':lon,'shops':{},'limited':False,'facilities':{},'facility_limits':[]} for name,lat,lon in areas]
+    remaining=[len(queries)]*len(rows)
+    removed=set(); completed=0; total=len(rows)*len(queries)
+    if not total: raise ValueError('검색어가 없어요. 업종 검색어를 먼저 골라 주세요.')
+    def fetch(index,term):
+        r=rows[index]
+        return detailed_search(key,term,r['lat'],r['lon'],radius)
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        jobs={pool.submit(fetch,i,term):(i,term) for i in range(len(rows)) for term in queries}
+        try:
+            for future in as_completed(jobs):
+                i,term=jobs[future]
+                docs,truncated=future.result()
+                r=rows[i]
+                for shop in docs:
+                    if relevant(shop,terms+[term]): r['shops'][shop['id']]=shop
+                    else: removed.add(shop['id'])
+                r['limited']=r['limited'] or truncated
+                remaining[i]-=1; completed+=1
+                if on_progress: on_progress(completed,total,sum(n==0 for n in remaining),len(rows))
+        except Exception:
+            for future in jobs: future.cancel()
+            raise
+    allshops={}
+    for r in rows:
+        allshops.update(r['shops'])
+        r['shops']=list(r['shops'].values())
+    return rows,allshops,removed
 
 def baze_request(key,payload,timeout=75):
     from urllib.parse import urlsplit
@@ -600,23 +633,15 @@ if step==2:
         elif not point: st.warning('지도에서 위치를 먼저 골라 주세요.')
         else:
             try:
-                results=[]; allshops={}; removed=set()
-                with st.spinner('주변 가게를 찾고 있어요…'):
-                    for name,lat,lon in grid(point['lat'],point['lng'],radius*1.5):
-                        shops={}; limited=False
-                        queries=list(dict.fromkeys(st.session_state['terms']+st.session_state.get('brand_terms',[])))
-                        def fetch_term(term):
-                            return term,detailed_search(kakao,term,lat,lon,radius)
-                        with ThreadPoolExecutor(max_workers=4) as pool:
-                            batch=list(pool.map(fetch_term,queries))
-                        for term,(docs,trunc) in batch:
-                            # 각 검색 요청의 검색어와 일치하는 결과만 허용.
-                            for d in docs:
-                                if relevant(d,st.session_state['terms']+[term]): shops[d['id']]=d
-                                else: removed.add(d['id'])
-                            limited=limited or trunc
-                        allshops.update(shops)
-                        results.append({'name':name,'lat':lat,'lon':lon,'shops':list(shops.values()),'limited':limited,'facilities':{},'facility_limits':[]})
+                areas=list(grid(point['lat'],point['lng'],radius*1.5))
+                terms=list(st.session_state['terms'])
+                queries=list(dict.fromkeys(terms+st.session_state.get('brand_terms',[])))
+                progress=st.progress(0,text=f'전체 {len(areas)}개 구역 중 0곳 완료 · 검색 준비 중')
+                def report_search(done,total,zones_done,zones_total):
+                    progress.progress(done/total,text=f'전체 {zones_total}개 구역 중 {zones_done}곳 완료 · 검색 {done}/{total}건')
+                with st.spinner('주변 구역을 함께 살펴보고 있어요…'):
+                    results,allshops,removed=collect_area_shops(kakao,areas,queries,radius,terms,report_search)
+                progress.progress(1.0,text=f'{len(areas)}개 구역 검색 완료')
                 st.session_state['result']={'rows':results,'center':'선택한 위치','terms':st.session_state['terms'][:],'radius':radius,'allshops':allshops,'excluded':len(removed)}
                 st.session_state['confirmed']=list(allshops)
                 move(4)
@@ -857,39 +882,32 @@ def storefront_profile(description):
 def storefront_html(name,description):
     eyebrow,kind,subtitle,accent=storefront_profile(description)
     name=html.escape(name.strip() or '우리 가게'); subtitle=html.escape(subtitle)
-    # Every fixture is a live HTML element: no image or background illustration.
-    objects=''.join('<div class="product '+kind+'"><i></i><b></b><span></span></div>' for _ in range(6))
-    guests=''.join('<div class="customer" style="--x:'+str(66+i*3.4)+'%;--y:'+str(15+(i%3)*9)+'px;--coat:'+['#806450','#b08562','#576451','#bda17c'][i%4]+'"><i></i><b></b><span></span></div>' for i in range(8))
+    products=''.join('<div class="goods '+kind+'"><i></i><b></b></div>' for _ in range(6))
+    people=''.join('<div class="person" style="--x:'+str(73+i*3.3)+'%;--c:'+['#63766a','#bd8a64','#6c7b8a','#aa6656','#b9a174'][i%5]+';--scale:'+str(.85+(i%3)*.06)+'"><i></i><b></b><em></em></div>' for i in range(6))
     return """<style>
-    .store-world{position:relative;height:clamp(360px,55vh,560px);min-width:0;overflow:hidden;border:1px solid #c8b08a;border-radius:18px;background:linear-gradient(#f1e3c8 0%,#e5cfaa 78%,#bda482 78%,#d5bea0 100%);box-shadow:inset 0 0 70px #a0754144,0 12px 28px #67472920;--accent:ACCENT}
-    .store-world *{box-sizing:border-box}.facade{position:absolute;left:10%;right:10%;top:5%;bottom:17%;background:repeating-linear-gradient(0deg,#d7be96 0 28px,#cdb089 29px 30px);border:12px solid #b99870;box-shadow:0 16px 25px #4f321c33,inset 0 0 12px #6b4a2f44;border-radius:6px 6px 0 0}
-    .shop-sign{position:absolute;top:3%;left:8%;right:8%;height:23%;background:linear-gradient(#745039,#503723);border:5px solid #a88254;box-shadow:0 5px 8px #40261966,inset 0 0 0 1px #e5c48c;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:7px 18px;color:#fff1ce}
-    .shop-sign strong{font-family:'Do Hyeon',sans-serif;font-weight:400;font-size:clamp(20px,3.6vw,45px);line-height:1.2;text-align:center;overflow-wrap:anywhere;max-width:100%}.shop-sign small{font:10px sans-serif;letter-spacing:3px;color:#ddbd8d;margin-bottom:4px}
-    .canopy{position:absolute;top:28%;left:3%;right:3%;height:12%;background:repeating-linear-gradient(90deg,var(--accent) 0 44px,#eee0c4 44px 88px);transform:perspective(400px) rotateX(15deg);border-bottom:10px solid var(--accent);border-radius:4px 4px 12px 12px;box-shadow:0 9px 12px #3b251d55;z-index:3}
-    .shop-front{position:absolute;top:39%;bottom:0;left:8%;right:8%;display:flex;gap:10px;background:#5d412e;padding:10px;box-shadow:inset 0 4px 10px #1d130d88}
-    .display-window{position:relative;flex:3;border:5px solid #755239;background:linear-gradient(120deg,#fff5d6,#f2ca82 55%,#bb8d55);overflow:hidden;box-shadow:inset 0 0 25px #71451f55}
-    .display-window:after{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 0 35%,#fff9e836 36% 43%,transparent 44% 65%,#fff8e822 66% 70%,transparent 71%);pointer-events:none;z-index:4}
-    .pendant{position:absolute;left:25%;top:0;width:2px;height:24%;background:#594333;box-shadow:130px 0 #594333}.pendant:after{content:'';position:absolute;bottom:-8px;left:-23px;width:48px;height:22px;background:#866648;border-radius:50% 50% 5px 5px;box-shadow:0 12px 32px 12px #ffe8ab,130px 0 #866648}
-    .shelves{position:absolute;bottom:27%;left:7%;right:7%;display:grid;grid-template-columns:repeat(3,1fr);gap:16px 8px;border-bottom:9px solid #805635;padding:0 6px 4px}
-    .product{position:relative;height:31px;border-radius:50%;background:#f4e7ca;box-shadow:0 3px 3px #724d2933}.product i{position:absolute;inset:7px 10px;border-radius:50%;background:#a77942;box-shadow:inset 0 2px #e3b876}.product.salad i{background:#70874d;box-shadow:inset 5px 3px #9dac61,inset -6px -4px #a45739}.product.cafe{width:32px;justify-self:center;border-radius:3px 3px 12px 12px;background:#f9efdb;border-top:5px solid #69452e}.product.cafe:after{content:'';position:absolute;right:-12px;top:3px;width:14px;height:17px;border:4px solid #f9efdb;border-radius:50%}.product.cafe i{display:none}.product.bakery{background:#c38b46;border-radius:50% 50% 30% 30%;box-shadow:inset 0 4px #ebba72,0 2px 4px #78533155}.product.bakery i{inset:6px 13px;background:repeating-linear-gradient(110deg,transparent 0 6px,#edd0a2 7px 10px)}.product.katsu i{background:repeating-linear-gradient(90deg,#9e602e 0 7px,#d79c57 7px 10px)}.product.flower{background:#a97951;border-radius:3px 3px 12px 12px;width:28px;justify-self:center}.product.flower i{inset:-15px -7px 16px;background:#8e715b;box-shadow:8px 0 #b98a6d,-5px -7px #cab599}
-    .counter{position:absolute;bottom:0;height:25%;left:0;right:0;background:repeating-linear-gradient(90deg,#976a40 0 24px,#865b35 25px 27px);border-top:9px solid #62442e;box-shadow:0 -3px 6px #8d693e44}
-    .shop-door{position:relative;flex:1.1;border:6px solid #7c573b;background:linear-gradient(115deg,#eaca91,#a57f52);box-shadow:inset 0 0 20px #4e342744}.shop-door:after{content:'';position:absolute;right:12%;top:55%;width:5px;height:32px;background:#d8bd7e;box-shadow:1px 2px 3px #5e422b}.door-open{position:absolute;top:24%;left:9%;right:9%;background:#fff0cf;padding:6px 2px;text-align:center;color:#6d4a2c;font-size:clamp(10px,1.6vw,18px);transform:rotate(-5deg);box-shadow:0 3px 5px #64422033}
-    .welcome-mat{position:absolute;bottom:10%;left:59%;width:18%;height:5%;background:#826647;transform:skewX(-18deg);border:3px solid #ad8a5e;box-shadow:0 3px 5px #6d523733}
-    .planter{position:absolute;left:5%;bottom:15%;width:37px;height:45px;background:linear-gradient(90deg,#a16c46,#c18a60,#98603e);border-radius:3px 3px 11px 11px;z-index:5}.planter:before{content:'';position:absolute;bottom:35px;left:-12px;width:60px;height:70px;background:radial-gradient(ellipse at 30% 40%,#62704a 0 35%,transparent 36%),radial-gradient(ellipse at 65% 65%,#475d3b 0 40%,transparent 41%),radial-gradient(ellipse at 60% 20%,#7a8456 0 35%,transparent 36%)}
-    .customer{position:absolute;left:var(--x);bottom:var(--y);width:27px;height:80px;z-index:7;filter:drop-shadow(3px 5px 2px #62452b33)}.customer i{position:absolute;top:0;left:6px;width:17px;height:20px;border-radius:50%;background:#46372c;border-bottom:5px solid #c1946c}.customer b{position:absolute;top:19px;left:1px;width:27px;height:35px;border-radius:12px 12px 5px 5px;background:var(--coat);box-shadow:inset -4px 0 #0002}.customer span{position:absolute;top:53px;left:5px;width:7px;height:25px;background:#4b443c;box-shadow:12px 0 #4b443c;border-radius:0 0 3px 3px}
-    .street-caption{position:absolute;bottom:12px;left:18px;color:#563d29;font-size:14px;max-width:48%}
-    @media(max-width:650px){.facade{left:4%;right:4%;border-width:7px}.shop-front{left:4%;right:4%;gap:5px;padding:5px}.shop-sign{left:4%;right:4%}.shop-sign small{font-size:8px;letter-spacing:1px}.customer{transform:scale(.8);transform-origin:bottom}.street-caption{font-size:11px}.planter{left:1%}}
-    </style><style>
-.stApp .store-world{background:linear-gradient(#ecdda9 0%,#d9dbbb 78%,#b2baa0 78%,#c8c7aa 100%);border:5px solid #397c79;border-radius:5px;box-shadow:inset 0 0 60px #6b8e7230,0 7px 0 #245a59}
-.stApp .facade{background:repeating-linear-gradient(0deg,#eddb9f 0 28px,#d8c78d 29px 30px);border-color:#397c79;border-width:12px;box-shadow:0 14px 22px #264c4144,inset 0 0 9px #42756a44}
-.stApp .shop-sign{background:linear-gradient(#416c97,#31547c);border-color:#f0e2b2;box-shadow:0 4px 0 #264b65,0 9px 12px #264b4b44;color:#fff4d1}
-.stApp .shop-sign small{color:#e5d7a5}.stApp .shop-sign strong{font-family:'Do Hyeon',sans-serif!important;text-shadow:2px 2px #203f5e}
-.stApp .shop-front{background:#2c6864}.stApp .display-window,.stApp .shop-door{border-color:#397c79}.stApp .shop-door{background:linear-gradient(115deg,#ffe4a7,#9fb5a0)}
-.stApp .door-open{background:#fff3ce;color:#ad4d3f;border:1px solid #ba9d64;font-family:'Do Hyeon',sans-serif}
-.stApp .canopy{background:repeating-linear-gradient(90deg,#397c79 0 44px,#f5e8ba 44px 88px);border-bottom-color:#2b6562}
-.stApp .facade:after{content:'';position:absolute;right:-9%;bottom:3%;width:24px;height:47px;background:linear-gradient(#bb5a48,#9a4337);border:2px solid #7e382e;border-radius:4px;box-shadow:0 3px 3px #5e523333}
-.stApp .street-caption{font-family:'Do Hyeon',sans-serif!important;color:#345950}
-</style><div class="store-world"><div class="facade"><div class="shop-sign"><small>EYEBROW</small><strong>SHOPNAME</strong></div><div class="canopy"></div><div class="shop-front"><div class="display-window"><div class="pendant"></div><div class="shelves">OBJECTS</div><div class="counter"></div></div><div class="shop-door"><div class="door-open">문 열었어요</div></div></div></div><div class="planter"></div><div class="welcome-mat"></div>GUESTS<div class="street-caption">SUBTITLE<br>새로운 시작을 축하해요.</div></div>""".replace('ACCENT',accent).replace('EYEBROW',eyebrow).replace('SHOPNAME',name).replace('OBJECTS',objects).replace('GUESTS',guests).replace('SUBTITLE',subtitle)
+    *{box-sizing:border-box} .store-world{position:relative;height:480px;overflow:hidden;background:radial-gradient(ellipse at 50% 10%,#faf0d5,#ddd6bc);border-radius:12px;color:#f4e6c3;font-family:'Do Hyeon',sans-serif;isolation:isolate}
+    .street{position:absolute;bottom:0;left:0;right:0;height:95px;background:repeating-linear-gradient(0deg,transparent 0 28px,#b4ac9533 29px 30px),repeating-linear-gradient(90deg,#c8c3b0 0 94px,#b8b29c 95px 96px);transform:perspective(350px) rotateX(20deg);transform-origin:bottom;box-shadow:inset 0 14px 22px #575a4c33}
+    .building{position:absolute;left:14%;right:14%;top:23px;bottom:65px;background:repeating-linear-gradient(0deg,transparent 0 34px,#cbc09d 35px 36px),repeating-linear-gradient(90deg,#e8dcb8 0 64px,#d3c7a5 65px 66px);border:1px solid #b9b498;border-top:12px solid #728d7a;box-shadow:12px 13px 0 #b3b8a044,0 22px 35px #394f4533}
+    .building:before,.building:after{content:'';position:absolute;top:0;bottom:0;width:15px;background:repeating-linear-gradient(0deg,#3a7770 0 22px,#80a194 23px 24px);box-shadow:inset 3px 0 #265b5544}.building:before{left:0}.building:after{right:0}
+    .sign{position:absolute;top:17px;left:8%;right:8%;height:83px;padding:8px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(#42678b,#294966);border:3px solid #e6d6a6;outline:3px solid #24485d;box-shadow:0 8px 10px #223f3e33,inset 0 0 0 3px #779094;z-index:4}
+    .sign small{font:9px sans-serif;letter-spacing:3px;color:#e5d5af}.sign strong{font-weight:400;font-size:clamp(24px,4.4vw,43px);text-shadow:2px 3px #203d55;line-height:1.2;max-width:100%;overflow-wrap:anywhere;text-align:center}
+    .awning{position:absolute;top:116px;left:3%;right:3%;height:46px;background:repeating-linear-gradient(90deg,#397c73 0 36px,#f1e2bc 36px 72px);transform:perspective(350px) rotateX(22deg);box-shadow:0 12px 13px #273f3b44;z-index:6;border-top:3px solid #245c55;border-bottom:10px solid #2f6c63;border-radius:3px 3px 9px 9px}
+    .front{position:absolute;top:157px;left:7%;right:7%;bottom:15px;display:flex;gap:12px;padding:7px;background:#295b53;box-shadow:0 4px 0 #1f4944,inset 0 3px 6px #15332d88}
+    .window{position:relative;flex:2.4;background:radial-gradient(ellipse at 40% 12%,#fff1b8,#d2ae72 65%,#957454);border:6px solid #437e70;box-shadow:inset 0 0 23px #66442966;overflow:hidden}
+    .window:after{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 25%,#fff9e637 26% 34%,transparent 35% 64%,#fff9e622 65% 69%,transparent 70%);border-right:3px solid #326b5f;right:48%;z-index:7;pointer-events:none}
+    .wall-shelf{position:absolute;left:7%;right:7%;top:39%;height:7px;background:#845e3c;box-shadow:0 5px 4px #68472255}.jars{position:absolute;left:10%;top:20%;display:flex;gap:13px}.jars i{width:18px;height:30px;background:linear-gradient(90deg,#997543,#e2bf79,#9c7946);border-radius:4px 4px 2px 2px;border-top:5px solid #654f38}
+    .lamp{position:absolute;top:0;left:27%;width:2px;height:22px;background:#66503b;box-shadow:115px 0 #66503b}.lamp:after{content:'';position:absolute;top:19px;left:-21px;width:45px;height:18px;border-radius:40px 40px 3px 3px;background:#3c6455;box-shadow:0 15px 30px 14px #fff0b8aa,115px 0 #3c6455}
+    .display{position:absolute;bottom:35%;left:7%;right:7%;display:flex;align-items:flex-end;justify-content:space-around;gap:9px;flex-wrap:wrap;padding:9px;background:#fff1c232;border:2px solid #d3bc88;border-bottom:7px solid #7d593a;border-radius:5px 5px 0 0;box-shadow:0 5px 7px #68482644}
+    .goods{position:relative;width:33px;height:20px;background:#f3e5c7;border-radius:50%;box-shadow:0 3px 0 #ac9b76}.goods i{position:absolute;inset:4px 5px;background:#ba844a;border-radius:50%}.goods.cafe{width:22px;height:24px;background:#f9f1db;border-radius:2px 2px 7px 7px;border-top:4px solid #775336}.goods.cafe:after{content:'';position:absolute;right:-8px;top:2px;width:9px;height:12px;border:3px solid #f9f1db;border-radius:50%}.goods.cafe i{display:none}.goods.bakery{height:22px;background:linear-gradient(#e9b56e,#b87b3b);border-radius:45% 45% 25% 25%}.goods.bakery i{background:repeating-linear-gradient(110deg,transparent 0 5px,#f6d09a 6px 8px)}.goods.salad i{background:#7f9855;box-shadow:inset 5px 3px #c1ba66,inset -5px -2px #b46849}.goods.katsu i{background:repeating-linear-gradient(90deg,#a76a32 0 5px,#e3b16c 6px 8px)}.goods.flower{background:#ae7653;border-radius:0 0 6px 6px;width:21px;height:22px}.goods.flower i{inset:-17px -4px 12px;background:#7b9365;box-shadow:5px -5px #c6a49a,-4px -8px #bf8c79}
+    .counter{position:absolute;bottom:0;left:0;right:0;height:32%;background:repeating-linear-gradient(90deg,#9d7750 0 14px,#87623d 15px 17px);border-top:8px solid #624c36;box-shadow:inset 0 8px 9px #5e442744}
+    .door{position:relative;flex:1;min-width:60px;background:linear-gradient(115deg,#e2cb98,#9eaa83 75%);border:6px solid #447d6b;box-shadow:inset 0 0 12px #355b4d55}.door:before{content:'';position:absolute;left:12%;right:12%;top:12%;height:34%;border:2px solid #c5c5a5;background:#e9dcad33}.door:after{content:'';position:absolute;right:12%;top:58%;width:5px;height:28px;background:linear-gradient(90deg,#8d794b,#f0d490);box-shadow:2px 2px 3px #40544877}.open{position:absolute;top:30%;left:12%;right:12%;padding:7px 0;background:#f5e9c4;color:#ac5140;text-align:center;font-size:clamp(11px,1.7vw,18px);transform:rotate(-5deg);box-shadow:0 3px 6px #465a4544}
+    .step{position:absolute;bottom:54px;left:19%;right:19%;height:17px;background:#96a696;border-top:5px solid #c4ceba;box-shadow:0 7px 7px #5c6b5544}.mat{position:absolute;bottom:37px;left:61%;width:14%;height:20px;background:repeating-linear-gradient(90deg,#877959 0 2px,#998967 3px 4px);transform:skewX(-20deg);border:2px solid #6e674c}
+    .board{position:absolute;left:9%;bottom:49px;width:80px;height:107px;padding:11px 6px;background:#31594c;border:7px solid #9d7c52;transform:rotate(-5deg);box-shadow:4px 4px 0 #6a644e44;text-align:center;color:#f4e7c5;font-size:15px;z-index:8}.board small{display:block;font:10px sans-serif;letter-spacing:1px;border-bottom:1px solid #d0c9a766;margin-bottom:10px;padding-bottom:6px}.board span{font-size:12px;line-height:1.6}
+    .plant{position:absolute;right:12%;bottom:56px;width:35px;height:38px;background:linear-gradient(90deg,#b08057,#d0a175,#a5744f);border-top:5px solid #9e704b;border-radius:0 0 8px 8px;z-index:7}.plant:before{content:'';position:absolute;bottom:28px;left:-15px;width:65px;height:75px;background:radial-gradient(ellipse at 30% 55%,#627c4f 0 30%,transparent 32%),radial-gradient(ellipse at 68% 55%,#44654b 0 33%,transparent 35%),radial-gradient(ellipse at 50% 20%,#80965e 0 32%,transparent 34%)}
+    .person{position:absolute;left:var(--x);bottom:9px;width:24px;height:70px;z-index:10;transform:scale(var(--scale));transform-origin:bottom;filter:drop-shadow(4px 5px 2px #43514333)}.person i{position:absolute;top:0;left:5px;width:15px;height:18px;border-radius:45%;background:#423d32;border-bottom:4px solid #bf9870}.person b{position:absolute;top:17px;left:0;width:25px;height:31px;border-radius:10px 10px 3px 3px;background:var(--c);box-shadow:inset -4px 0 #0002}.person em{position:absolute;top:47px;left:4px;width:6px;height:22px;background:#4e5046;box-shadow:11px 0 #4e5046;border-radius:0 0 2px 2px}
+    .caption{position:absolute;left:22px;bottom:15px;color:#496353;font-size:14px;letter-spacing:.03em}.badge{position:absolute;right:19px;top:17px;color:#6a7862;border:1px solid #9ca88a;border-radius:50%;width:58px;height:58px;display:grid;place-items:center;font-size:12px;text-align:center;transform:rotate(12deg);line-height:1.5}
+    @media(max-width:650px){.building{left:7%;right:7%}.sign{left:7%;right:7%}.board{left:2%;width:62px;font-size:12px}.front{gap:6px}.caption{font-size:11px;left:10px}.badge{display:none}.plant{right:4%}.display{gap:6px}.goods{width:25px}.jars{gap:8px}.sign small{font-size:8px;letter-spacing:1px}}
+    </style><div class="store-world"><div class="street"></div><div class="badge">새로운<br>시작</div><div class="building"><div class="sign"><small>EYEBROW</small><strong>SHOPNAME</strong></div><div class="awning"></div><div class="front"><div class="window"><div class="lamp"></div><div class="jars"><i></i><i></i><i></i><i></i></div><div class="wall-shelf"></div><div class="display">PRODUCTS</div><div class="counter"></div></div><div class="door"><div class="open">문 열었어요</div></div></div></div><div class="step"></div><div class="mat"></div><div class="board"><small>WELCOME</small><span>SUBTITLE</span></div><div class="plant"></div>PEOPLE<div class="caption">우리 동네에 새로운 가게가 생겼어요.</div></div>""".replace('EYEBROW',eyebrow).replace('PRODUCTS',products).replace('PEOPLE',people).replace('SUBTITLE',subtitle).replace('SHOPNAME',name)
 
 if step==5:
     save_current_shop()
@@ -904,7 +922,7 @@ if step==6:
     scene=scene.replace('.stApp ', '')
     scene=scene.replace('height:clamp(360px,55vh,560px)', 'height:460px')
     document='<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>@import url("https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap");html,body{margin:0;padding:0;background:#fff9e7;font-family:"Do Hyeon","Malgun Gothic",sans-serif}*{box-sizing:border-box}</style></head><body>'+scene+'</body></html>'
-    components.html(document,height=485,scrolling=False)
+    components.html(document,height=495,scrolling=False)
     pass
     a,b=st.columns(2)
     if a.button('개업 준비 다시 보기',use_container_width=True): move(5)
