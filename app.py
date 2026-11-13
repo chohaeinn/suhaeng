@@ -235,10 +235,9 @@ def move(n):
 st.session_state.setdefault('step',0)
 step=st.session_state['step']
 if step!=0:
-    st.title('창업 나침반')
     pass
 visible_step={1:1,2:2,4:3,5:4,6:4}.get(step,2)
-if step!=0: st.progress(visible_step/4,text=f'{visible_step} / 4 · '+['가게 정하기','동네 고르기','후보 살펴보기','개업 준비'][visible_step-1])
+# Step caption removed; search progress is retained.
 # 단계에 따라 철제 셔터가 올라가는 배경. 입력 요소와 지도는 항상 전면에 유지.
 shutter_height=100 if step==0 else 0 if step==6 else {1:100,2:72,3:40,4:5}[visible_step]
 previous=st.session_state.get('_shutter_height',100)
@@ -320,16 +319,19 @@ word-wrap:normal!important;direction:ltr!important;font-feature-settings:'liga'!
 [data-testid="stPopover"] button{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;min-height:46px!important;height:auto!important;padding:10px 16px!important}
 [data-testid="stPopover"] button p{margin:0!important;line-height:1.4!important;white-space:nowrap!important;font-size:20px!important}
 </style>""",unsafe_allow_html=True)
-account_left,account_right=st.columns([5,2])
-with account_right:
-    with st.popover((st.session_state.get('demo_owner','')+' 사장님') if st.session_state.get('demo_owner') else '로그인',use_container_width=True):
-        if st.session_state.get('demo_owner'):
-            st.write(st.session_state['demo_owner']+' 사장님, 반가워요.')
-            if st.button('로그아웃',key='account_logout'):
-                st.session_state.pop('demo_owner',None)
-                st.rerun()
-        else:
-            if st.button('로그인 / 등록',key='account_login',use_container_width=True): login_dialog()
+with st.container(key='retro_account_header'):
+    title_column,account_column=st.columns([8,1],vertical_alignment='center')
+    with title_column:
+        if step!=0: st.title('창업 나침반')
+    with account_column:
+        with st.popover('계정',icon=':material/person:',use_container_width=True):
+            if st.session_state.get('demo_owner'):
+                st.write(st.session_state['demo_owner']+' 사장님, 반가워요.')
+                if st.button('로그아웃',key='account_logout'):
+                    st.session_state.pop('demo_owner',None)
+                    st.rerun()
+            else:
+                if st.button('로그인 / 등록',key='account_login',use_container_width=True): login_dialog()
 
 if step!=0:
     st.markdown("""<style>
@@ -366,6 +368,8 @@ def apply_shop_theme():
     st.markdown('<style>\n/* Portals live outside the main app: style them directly as well. */\n[role="dialog"],[data-testid="stDialog"] [role="dialog"]{background:#fff9e7!important;border:4px solid #397c79!important;border-top:10px solid #345d87!important;border-radius:9px!important;box-shadow:0 12px 35px #254c4544!important;color:#344b46!important}\n[role="dialog"] h2,[role="dialog"] h3{font-family:\'Do Hyeon\',\'Malgun Gothic\',sans-serif!important;color:#2c6663!important;font-weight:400!important}\n[role="dialog"] p,[role="dialog"] input,[role="dialog"] textarea{font-family:\'Gowun Dodum\',\'Malgun Gothic\',sans-serif!important;color:#344b46!important}\n[role="dialog"] [data-testid="stWidgetLabel"] p{font-family:\'Do Hyeon\',sans-serif!important;font-size:20px!important}\n[role="dialog"] [data-testid="stTextInputRootElement"],[role="dialog"] [data-baseweb="select"]>div{background:#fffbea!important;border:2px solid #66938a!important;border-radius:6px!important;min-height:54px!important}\n[role="dialog"] input,[role="dialog"] textarea{background:#fffbea!important;font-size:18px!important}\n[role="dialog"] button[kind="secondary"],[role="dialog"] button[kind="primary"],[role="dialog"] [data-testid="stFormSubmitButton"] button{background:linear-gradient(#fff4cd,#e8d59b)!important;border:2px solid #397c79!important;border-radius:5px!important;box-shadow:0 3px 0 #245a59!important;min-height:48px!important;color:#285e5b!important}\n[role="dialog"] button p{font-family:\'Do Hyeon\',sans-serif!important;font-size:19px!important}\n[role="dialog"] [data-testid="stChatMessage"]{background:#f0edd7!important;border:1px solid #8bac9b!important;border-left:4px solid #397c79!important;border-radius:6px!important}\n[data-testid="stPopoverBody"],[data-baseweb="popover"] [role="listbox"],[data-baseweb="menu"],[data-baseweb="calendar"]{background:#fff9e7!important;border:2px solid #66938a!important;border-radius:7px!important;color:#344b46!important}\n[data-testid="stPopoverBody"] button{background:#f3e5b9!important;border-color:#397c79!important;color:#285e5b!important}\n[data-baseweb="popover"] [role="option"]:hover{background:#dce8cf!important}\n.stApp [data-testid="stPopover"]>button{background:#fff4cd!important;border:2px solid #66938a!important;border-radius:5px!important;color:#285e5b!important}\n.stApp .st-key-floating_nachim{width:76px!important;right:22px!important;bottom:22px!important}\n.stApp .st-key-floating_nachim button{position:relative!important;width:72px!important;height:72px!important;min-height:72px!important;padding:0!important;overflow:hidden!important;border:5px solid #397c79!important;border-radius:50%!important;background:radial-gradient(circle,#fff1c9 0 52%,#b99858 53% 58%,#e2ca8b 59% 100%)!important;box-shadow:0 4px 0 #245a59,0 7px 12px #254c4533!important}\n.stApp .st-key-floating_nachim button p{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip-path:inset(50%)!important;white-space:nowrap!important}\n.stApp .st-key-floating_nachim button:before{content:\'N\';position:absolute;top:3px;left:0;right:0;text-align:center;font:bold 11px Georgia,serif;color:#345d87;z-index:2}\n.stApp .st-key-floating_nachim button:after{content:\'\';position:absolute;left:23px;top:16px;width:18px;height:34px;background:linear-gradient(#ad4d3f 0 50%,#345d87 50% 100%);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);transform:rotate(28deg);filter:drop-shadow(1px 2px 1px #345d8755);pointer-events:none}\n.stApp .st-key-floating_nachim button:focus-visible{outline:3px solid #ad4d3f!important;outline-offset:4px}\n</style>',unsafe_allow_html=True)
 
     st.markdown('<style>\n.stApp h1{border:5px double #f0dfad!important;letter-spacing:.08em!important;box-shadow:0 5px 0 #25475e,0 9px 0 #c6ba89,0 14px 18px #294c4433!important}\n.stApp h2,.stApp h3{letter-spacing:.04em!important;text-shadow:0 1px #fff8d9}\n.stApp [data-testid="stExpander"]{border:3px double #578879!important;border-top:7px solid #397c79!important;border-radius:3px!important}\n.stApp [data-testid="stExpander"] summary{background:repeating-linear-gradient(0deg,#f2e4bb 0 3px,#efdfb1 4px 5px)!important;border-bottom:1px solid #b3b797!important;padding:13px 16px!important}\n.stApp [data-testid="stExpander"] summary p{font-family:\'Do Hyeon\',sans-serif!important;font-size:20px!important;color:#315f56!important}\n.stApp .stButton>button,.stApp .stDownloadButton>button{border:3px double #397c79!important;border-radius:4px!important;box-shadow:0 4px 0 #245a59,inset 0 0 0 2px #fff7d8!important;letter-spacing:.04em!important}\n.stApp .stButton>button[kind="primary"]{border:3px double #f0dfad!important;box-shadow:0 4px 0 #24475c,inset 0 0 0 1px #7195a4!important}\n.stApp .retro-status{border:3px double #ddcf9e!important;letter-spacing:.06em!important}\n.stApp .zone-label{border:3px double #779b85!important;border-left:7px solid #ad4d3f!important;background:#eee4bd!important}\n.stApp [data-testid="stTextInputRootElement"],.stApp [data-baseweb="select"]>div{border-radius:3px!important;box-shadow:inset 0 2px 5px #325b4922,0 2px 0 #d7cfaa!important}\n.stApp .st-key-floating_nachim button{border:5px solid #397c79!important;border-radius:50%!important;box-shadow:0 4px 0 #245a59,0 7px 12px #254c4533!important}\n@media(prefers-contrast:more){.stApp p{color:#243c32!important}}\n</style>',unsafe_allow_html=True)
+
+    st.markdown('<style>\n.stApp .st-key-retro_account_header{background:linear-gradient(#426b90,#2c4e70);border:3px double #e8d9aa;border-radius:4px;padding:7px 15px!important;box-shadow:0 4px 0 #24475e;margin-bottom:15px}\n.stApp .st-key-retro_account_header h1{background:transparent!important;border:0!important;box-shadow:none!important;margin:0!important;padding:6px 0!important;font-size:clamp(25px,3vw,39px)!important;color:#fff3d0!important;text-shadow:1px 2px #24445f!important}\n.stApp .st-key-retro_account_header [data-testid="stHorizontalBlock"]{padding:0!important;gap:8px!important;flex-wrap:nowrap!important}\n.stApp .st-key-retro_account_header [data-testid="stPopover"]>button{width:48px!important;height:43px!important;min-height:43px!important;min-width:43px!important;padding:6px!important;justify-content:center!important;background:linear-gradient(#f7e8bb,#d5bd80)!important;border:3px double #e9d9a3!important;border-radius:5px!important;box-shadow:0 3px 0 #213e56!important;color:#305d65!important}\n.stApp .st-key-retro_account_header [data-testid="stPopover"]>button p{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip-path:inset(50%)!important}\n.stApp .st-key-retro_account_header [data-testid="stPopover"]>button [data-testid="stIconMaterial"]{font-family:\'Material Symbols Rounded\'!important;font-size:27px!important;color:#315b62!important}\n.stApp:has(.home-shutter) .st-key-retro_account_header{background:transparent!important;border:0!important;box-shadow:none!important;margin-bottom:0!important;padding:0!important}\n</style>',unsafe_allow_html=True)
 
 with st.sidebar:
     st.header('연결 설정')
