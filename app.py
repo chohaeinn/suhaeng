@@ -319,7 +319,7 @@ word-wrap:normal!important;direction:ltr!important;font-feature-settings:'liga'!
 [data-testid="stPopover"] button p{margin:0!important;line-height:1.4!important;white-space:nowrap!important;font-size:20px!important}
 </style>""",unsafe_allow_html=True)
 def reset_display_settings():
-    for key,value in {'pref_mobile':False,'pref_font':'기본','pref_motion':False,'pref_contrast':False}.items():
+    for key,value in {'pref_mobile':False,'pref_font':'기본','pref_motion':False,'pref_dark':False}.items():
         st.session_state[key]=value
 
 def display_settings_style():
@@ -331,8 +331,10 @@ def display_settings_style():
         css+='.stApp .block-container{max-width:520px!important;width:100%!important;padding:12px!important;margin:auto!important}.stApp [data-testid="stHorizontalBlock"]:not(.st-key-retro_account_header [data-testid="stHorizontalBlock"]){flex-wrap:wrap!important}.stApp [data-testid="stHorizontalBlock"]:not(.st-key-retro_account_header [data-testid="stHorizontalBlock"]) > [data-testid="stColumn"]{width:100%!important;flex:1 1 100%!important;min-width:0!important}.stApp .st-key-retro_account_header h1{font-size:clamp(23px,6vw,32px)!important}.stApp .home-shutter{height:32svh!important}.stApp .home-shutter .name{font-size:clamp(30px,8vw,49px)!important}.stApp .vintage-compass{width:65px!important}.stApp .st-key-floating_nachim{right:12px!important;bottom:16px!important}.stApp .stButton>button{min-height:48px!important}'
     if st.session_state.get('pref_motion'):
         css+='*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}'
-    if st.session_state.get('pref_contrast'):
-        css+='.stApp p,.stApp label{color:#183d3c!important}.stApp input,.stApp textarea{background:#fffdf4!important;color:#142e2d!important;border:2px solid #245a59!important}.stApp button{border-width:2px!important}'
+    if mobile:
+        css+='html,body{width:100%;max-width:100%;overflow-x:hidden!important}.stApp,.stApp [data-testid="stMain"]{max-width:100vw!important;overflow-x:clip!important}.stApp .block-container{max-width:100%!important;width:100%!important;padding:10px 10px 80px!important;box-sizing:border-box!important}.stApp [data-testid="stVerticalBlock"],.stApp [data-testid="stElementContainer"]{min-width:0!important;max-width:100%!important}.stApp button,.stApp input,.stApp textarea{max-width:100%!important;box-sizing:border-box!important}.stApp button p{white-space:normal!important;overflow-wrap:anywhere!important;line-height:1.3!important}.stApp iframe,.stApp img{max-width:100%!important}.stApp .home-shutter{height:clamp(170px,32svh,290px)!important;min-height:0!important;padding:6px!important}.stApp .home-shutter .name{white-space:normal!important;font-size:clamp(27px,7.5vw,43px)!important;letter-spacing:0!important}.stApp .brand-lockup{gap:8px!important;max-width:100%!important}.stApp .home-shutter .small,.stApp .home-shutter p{font-size:clamp(15px,4.2vw,21px)!important}.stApp .st-key-retro_account_header [data-testid="stColumn"]:first-child{flex:1 1 0!important;width:auto!important}.stApp .st-key-retro_account_header [data-testid="stColumn"]:not(:first-child){flex:0 0 39px!important;width:39px!important}.stApp .st-key-retro_account_header{padding:7px!important}.stApp .st-key-retro_account_header h1{font-size:clamp(21px,5.5vw,30px)!important;overflow-wrap:anywhere!important}.stApp .st-key-retro_account_header [data-testid="stPopover"]>button{width:36px!important;min-width:36px!important;padding:3px!important}[role="dialog"]{max-width:calc(100vw - 20px)!important;max-height:88svh!important;overflow-y:auto!important}[data-testid="stPopoverBody"]{max-width:calc(100vw - 20px)!important;max-height:80svh!important;overflow-y:auto!important}'
+    if st.session_state.get('pref_dark',False):
+        css+=':root{color-scheme:dark}.stApp.stApp,.stApp [data-testid="stAppViewContainer"]{background:#182a2a!important;color:#f2e7cf!important}.stApp .block-container{background:#213533!important;border-color:#526a61!important;color:#f2e7cf!important}.stApp [data-testid="stSidebar"],[data-testid="stPopoverBody"],[role="dialog"]{background:#243a37!important;color:#f2e7cf!important}.stApp p,.stApp label,.stApp li,.stApp h2,.stApp h3,[role="dialog"] p,[role="dialog"] label,[data-testid="stPopoverBody"] p,[data-testid="stPopoverBody"] label{color:#f3e6c9!important}.stApp input,.stApp textarea,.stApp [data-baseweb="select"]>div,[role="dialog"] input,[data-testid="stPopoverBody"] input{background:#172b29!important;color:#fff2d4!important;-webkit-text-fill-color:#fff2d4!important;border-color:#81988b!important}.stApp input::placeholder,.stApp textarea::placeholder{color:#b1bcb0!important;-webkit-text-fill-color:#b1bcb0!important}.stApp .stButton>button,.stApp [data-testid="stFormSubmitButton"] button,[data-testid="stPopoverBody"] button{background:#34534c!important;color:#fff0cc!important;border-color:#a99464!important;box-shadow:0 3px 0 #101e1c!important}.stApp [data-testid="stExpander"],.stApp [data-testid="stExpander"] summary,.stApp [data-testid="stVerticalBlockBorderWrapper"],.stApp [data-testid="stChatMessage"]{background:#29423c!important;color:#f3e6c9!important;border-color:#60786b!important}.stApp .st-key-retro_account_header{background:linear-gradient(#334d66,#253c50)!important}.stApp .home-shutter .name,.stApp .home-shutter .small,.stApp .home-shutter p{color:#f6df9f!important;text-shadow:2px 2px #152b26!important}[role="listbox"],[role="option"],[data-baseweb="calendar"]{background:#243a37!important;color:#f3e6c9!important}'
     st.markdown('<style>'+css+'</style>',unsafe_allow_html=True)
 
 with st.container(key='retro_account_header'):
@@ -355,7 +357,7 @@ with st.container(key='retro_account_header'):
             st.toggle('모바일 모드',key='pref_mobile',help='화면을 좁게 맞추고 지도와 정보 카드를 세로로 배치해요.')
             st.selectbox('글자 크기',['기본','크게','아주 크게'],key='pref_font')
             st.toggle('애니메이션 줄이기',key='pref_motion')
-            st.toggle('글자와 입력창 선명하게',key='pref_contrast')
+            st.toggle('다크 모드',key='pref_dark')
             st.button('화면 설정 초기화',key='reset_display_prefs',on_click=reset_display_settings,use_container_width=True)
             st.write('화면 설정은 현재 접속 중에 유지돼요.')
 
@@ -732,7 +734,7 @@ if step==4:
             color='#ad4d3f' if active else '#397c79'
             pin=f"<div style='position:relative;width:36px;height:46px;filter:drop-shadow(0 3px 2px #503b2c55)'><div style='position:absolute;left:3px;top:2px;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:{color};border:3px solid #245a59;box-sizing:border-box'></div><div style='position:absolute;left:13px;top:12px;width:10px;height:10px;border-radius:50%;background:#fff1d4;border:2px solid #245a59;box-sizing:border-box'></div></div>"
             folium.Marker([r['lat'],r['lon']],tooltip=r['name'],icon=folium.DivIcon(html=pin,icon_size=(36,46),icon_anchor=(18,36))).add_to(m)
-        event=st_folium(m,height=(390 if st.session_state.get('pref_mobile') else 550),use_container_width=True,key='zone_icon_map_'+st.session_state['active_zone'],returned_objects=['last_object_clicked'])
+        event=st_folium(m,height=(330 if st.session_state.get('pref_mobile') else 550),use_container_width=True,key='zone_icon_map_'+st.session_state['active_zone'],returned_objects=['last_object_clicked'])
         point=event.get('last_object_clicked') if event else None
         zone,token=accept_zone_click(point,rows,st.session_state.get('_last_zone_click'))
         if zone:
