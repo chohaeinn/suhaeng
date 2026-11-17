@@ -318,8 +318,25 @@ word-wrap:normal!important;direction:ltr!important;font-feature-settings:'liga'!
 [data-testid="stPopover"] button{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;min-height:46px!important;height:auto!important;padding:10px 16px!important}
 [data-testid="stPopover"] button p{margin:0!important;line-height:1.4!important;white-space:nowrap!important;font-size:20px!important}
 </style>""",unsafe_allow_html=True)
+def reset_display_settings():
+    for key,value in {'pref_mobile':False,'pref_font':'기본','pref_motion':False,'pref_contrast':False}.items():
+        st.session_state[key]=value
+
+def display_settings_style():
+    mobile=st.session_state.get('pref_mobile',False)
+    size={'기본':17,'크게':20,'아주 크게':23}.get(st.session_state.get('pref_font','기본'),17)
+    css=f'.stApp p,.stApp label,.stApp input,.stApp textarea{{font-size:{size}px!important}}'
+    css+='.st-key-retro_account_header [data-testid="stHorizontalBlock"]{flex-wrap:nowrap!important;gap:6px!important}.st-key-retro_account_header [data-testid="stColumn"]{min-width:0!important}'
+    if mobile:
+        css+='.stApp .block-container{max-width:520px!important;width:100%!important;padding:12px!important;margin:auto!important}.stApp [data-testid="stHorizontalBlock"]:not(.st-key-retro_account_header [data-testid="stHorizontalBlock"]){flex-wrap:wrap!important}.stApp [data-testid="stHorizontalBlock"]:not(.st-key-retro_account_header [data-testid="stHorizontalBlock"]) > [data-testid="stColumn"]{width:100%!important;flex:1 1 100%!important;min-width:0!important}.stApp .st-key-retro_account_header h1{font-size:clamp(23px,6vw,32px)!important}.stApp .home-shutter{height:32svh!important}.stApp .home-shutter .name{font-size:clamp(30px,8vw,49px)!important}.stApp .vintage-compass{width:65px!important}.stApp .st-key-floating_nachim{right:12px!important;bottom:16px!important}.stApp .stButton>button{min-height:48px!important}'
+    if st.session_state.get('pref_motion'):
+        css+='*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}'
+    if st.session_state.get('pref_contrast'):
+        css+='.stApp p,.stApp label{color:#183d3c!important}.stApp input,.stApp textarea{background:#fffdf4!important;color:#142e2d!important;border:2px solid #245a59!important}.stApp button{border-width:2px!important}'
+    st.markdown('<style>'+css+'</style>',unsafe_allow_html=True)
+
 with st.container(key='retro_account_header'):
-    title_column,account_column=st.columns([8,1],vertical_alignment='center')
+    title_column,account_column,settings_column=st.columns([8,1,1],vertical_alignment='center')
     with title_column:
         if step!=0: st.title('창업 나침반')
     with account_column:
@@ -331,6 +348,17 @@ with st.container(key='retro_account_header'):
                     st.rerun()
             else:
                 if st.button('로그인 / 등록',key='account_login',use_container_width=True): login_dialog()
+
+    with settings_column:
+        with st.popover('설정',icon=':material/settings:',use_container_width=True):
+            st.subheader('화면 설정')
+            st.toggle('모바일 모드',key='pref_mobile',help='화면을 좁게 맞추고 지도와 정보 카드를 세로로 배치해요.')
+            st.selectbox('글자 크기',['기본','크게','아주 크게'],key='pref_font')
+            st.toggle('애니메이션 줄이기',key='pref_motion')
+            st.toggle('글자와 입력창 선명하게',key='pref_contrast')
+            st.button('화면 설정 초기화',key='reset_display_prefs',on_click=reset_display_settings,use_container_width=True)
+            st.write('화면 설정은 현재 접속 중에 유지돼요.')
+
 
 if step!=0:
     st.markdown("""<style>
@@ -373,6 +401,7 @@ def apply_shop_theme():
     st.markdown('<style>\n.stApp .st-key-retro_account_header{margin-bottom:4px!important}\n.stApp .st-key-retro_account_header [data-testid="stVerticalBlock"]{gap:0!important}\n.stApp .st-key-retro_account_header [data-testid="stPopover"]{margin:0!important}\n.stApp .retro-status{display:none!important}\n.stApp [data-testid="stMainBlockContainer"]>[data-testid="stVerticalBlock"]{gap:10px!important}\n.stApp [data-testid="stVerticalBlock"]>[data-testid="stElementContainer"]:has(> [data-testid="stMarkdown"] > div > style:only-child){display:none!important}\n.stApp [data-testid="stHeadingWithActionElements"] h2{padding-top:8px!important;margin-top:0!important}\n</style>',unsafe_allow_html=True)
 
     st.markdown('<style>\n.stApp .st-key-retro_account_header{padding:10px 17px!important;margin-top:0!important;margin-bottom:3px!important;min-height:75px!important}\n.stApp .st-key-retro_account_header h1{font-size:clamp(32px,4vw,48px)!important;line-height:1.18!important;padding:5px 0!important}\n.stApp .st-key-retro_account_header [data-testid="stHorizontalBlock"]{min-height:49px!important;align-items:center!important}\n.stApp .st-key-retro_account_header [data-testid="stPopover"]>button{height:46px!important;min-height:46px!important}\n.stApp [data-testid="stHeadingWithActionElements"] h2{margin-top:0!important;padding-top:4px!important}\n@media(max-width:650px){.stApp .st-key-retro_account_header{min-height:66px!important;padding:8px 11px!important}.stApp .st-key-retro_account_header h1{font-size:30px!important}}\n</style>',unsafe_allow_html=True)
+    display_settings_style()
 
 with st.sidebar:
     st.header('연결 설정')
@@ -703,7 +732,7 @@ if step==4:
             color='#ad4d3f' if active else '#397c79'
             pin=f"<div style='position:relative;width:36px;height:46px;filter:drop-shadow(0 3px 2px #503b2c55)'><div style='position:absolute;left:3px;top:2px;width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:{color};border:3px solid #245a59;box-sizing:border-box'></div><div style='position:absolute;left:13px;top:12px;width:10px;height:10px;border-radius:50%;background:#fff1d4;border:2px solid #245a59;box-sizing:border-box'></div></div>"
             folium.Marker([r['lat'],r['lon']],tooltip=r['name'],icon=folium.DivIcon(html=pin,icon_size=(36,46),icon_anchor=(18,36))).add_to(m)
-        event=st_folium(m,height=550,use_container_width=True,key='zone_icon_map_'+st.session_state['active_zone'],returned_objects=['last_object_clicked'])
+        event=st_folium(m,height=(390 if st.session_state.get('pref_mobile') else 550),use_container_width=True,key='zone_icon_map_'+st.session_state['active_zone'],returned_objects=['last_object_clicked'])
         point=event.get('last_object_clicked') if event else None
         zone,token=accept_zone_click(point,rows,st.session_state.get('_last_zone_click'))
         if zone:
